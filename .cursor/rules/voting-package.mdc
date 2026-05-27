@@ -1,0 +1,51 @@
+---
+description: Afterburner Voting package conventions and critical invariants
+alwaysApply: true
+---
+
+# Afterburner Voting Package
+
+Read `DEVELOPMENT_SPEC.md` in the repo root before implementing. It is the canonical handoff document for this package.
+
+## Reference implementation
+
+Mirror patterns from `../afterburner-documents` exactly:
+
+- Service provider, publish tags, env vars (`AFTERBURNER_VOTING_*`)
+- Permission seeder, install command, team-scoped routes
+- Livewire registration, navigation, policies, Testbench setup
+
+Also read `../afterburner-documents/AFTERBURNER_PACKAGE_PLAN.md` for add-on package conventions.
+
+## UI buttons
+
+Mirror the host app's Jetstream button components (same as documents):
+
+- Primary: `<x-button>` (gray-800, uppercase tracking-widest)
+- Secondary: `<x-secondary-button>`
+- Destructive: `<x-danger-button>`
+- Do **not** use raw Tailwind `bg-indigo-600` for action buttons
+- Use `no-spinner` on Livewire action buttons
+- Cross-page actions: `wire:click` + `redirectRoute()` with `<x-button>`, not styled anchor tags
+
+**Inline row actions** (remove option, edit, delete on a list row): use icon-only buttons with a `title` attribute — copy SVG + classes from `../afterburner-documents/resources/views/documents/index.blade.php` (e.g. delete folder). Do **not** use visible text labels like "Remove" beside inputs.
+
+**Document attachments:** When `laravel-afterburner/documents` is present, use `LinkDocument` / `UnlinkDocument` from the documents package via `AttachDocumentToBallot` / `DetachDocumentFromBallot`. UI lives in `voting.ballot-documents` Livewire component; mirror documents list row styling (icon, download link, icon-only detach).
+
+See `DEVELOPMENT_SPEC.md` §12 UI requirements for the full table.
+
+## Critical invariants
+
+1. Votes are keyed to a **voter unit** (morph), not a user. `BallotResponse` stores `cast_by_user_id` + `voter_unit_type` + `voter_unit_id`.
+2. **Unique constraint:** `(ballot_id, voter_unit_type, voter_unit_id)` — non-negotiable. Prevents double voting when designated voter changes.
+3. **Permissions gate capability; resolver gates eligibility.** Use existing slugs `vote_resolutions` and `create_resolutions`. Eligibility via `VoterEligibilityResolver` contract.
+4. All mutations go through **Actions**; keep controllers/Livewire thin.
+5. Always verify `$ballot->team_id === $team->id` on team-scoped routes.
+
+## Out of scope
+
+Do not build Property/Lot models, designated-voter UI, or strata-specific logic in this package. Document strata integration in README only.
+
+## Phasing
+
+Ship Phase 1 MVP first (see `DEVELOPMENT_SPEC.md` §21). Do not pull Phase 2/3 features into MVP unless explicitly requested.

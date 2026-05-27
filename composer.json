@@ -1,0 +1,58 @@
+{
+    "name": "laravel-afterburner/voting",
+    "description": "Team-scoped voting and ballots for Afterburner applications",
+    "version": "1.0.0",
+    "type": "library",
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "laravel/framework": "^11.0",
+        "laravel-afterburner/jetstream": "^1.0|dev-master",
+        "livewire/livewire": "^3.5"
+    },
+    "require-dev": {
+        "barryvdh/laravel-dompdf": "^3.0",
+        "laravel/pint": "^1.13",
+        "laravel-afterburner/documents": "@dev",
+        "orchestra/testbench": "^9.0",
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Afterburner\\Voting\\Tests\\": "tests/",
+            "App\\Models\\": "tests/Fixtures/Models/",
+            "App\\Traits\\": "tests/Fixtures/Traits/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "pint": "pint"
+    },
+    "autoload": {
+        "psr-4": {
+            "Afterburner\\Voting\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Afterburner\\Voting\\Providers\\VotingServiceProvider"
+            ],
+            "commands": [
+                "Afterburner\\Voting\\Console\\Commands\\InstallCommand"
+            ]
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../afterburner-documents"
+        }
+    ],
+    "suggest": {
+        "barryvdh/laravel-dompdf": "Required for PDF ballot results export.",
+        "laravel-afterburner/documents": "Attach team documents to ballots for voter reference material."
+    }
+}
