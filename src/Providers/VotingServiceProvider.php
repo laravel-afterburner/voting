@@ -24,6 +24,7 @@ use Afterburner\Voting\Policies\BallotPolicy;
 use Afterburner\Voting\Policies\ProxyVotePolicy;
 use Afterburner\Voting\Support\DocumentsIntegration;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
+use Afterburner\Playbook\Support\Playbook;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use App\Models\Team;
 use App\Support\Navigation;
@@ -134,6 +135,7 @@ class VotingServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerAuditSkipRoutes();
         $this->registerNavigation();
+        $this->registerPlaybook();
         $this->registerSystemSettings();
         $this->registerEventListeners();
         $this->registerSchedule();
@@ -267,6 +269,22 @@ class VotingServiceProvider extends ServiceProvider
         }
 
         Navigation::register($item);
+    }
+
+    protected function registerPlaybook(): void
+    {
+        if (! class_exists(Playbook::class)) {
+            return;
+        }
+
+        Playbook::register([
+            'key' => 'voting',
+            'label' => 'Voting',
+            'order' => 25,
+            'path' => __DIR__.'/../../playbook',
+            'enabled' => fn () => config('afterburner-voting.enabled', true),
+            'permission' => fn ($user) => $user?->can('viewAny', Ballot::class) ?? false,
+        ]);
     }
 
     /**
