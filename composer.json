@@ -45,12 +45,6 @@
     },
     "minimum-stability": "dev",
     "prefer-stable": true,
-    "repositories": [
-        {
-            "type": "path",
-            "url": "../afterburner-documents"
-        }
-    ],
     "suggest": {
         "barryvdh/laravel-dompdf": "Required for PDF ballot results export.",
         "laravel-afterburner/documents": "Attach team documents to ballots for voter reference material."

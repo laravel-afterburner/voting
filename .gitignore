@@ -1,3 +1,11 @@
 /vendor
-.phpunit.result.cache
+/node_modules
+/.idea
+/.vscode
+/.fleet
+/.nova
+/.zed
+/.cursor
 composer.lock
+.phpunit.cache
+.phpunit.result.cache

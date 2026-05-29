@@ -1,8 +1,19 @@
-# Afterburner Voting
+# Afterburner Voting Package
 
-Team-scoped ballots and vote casting for Afterburner Jetstream applications.
+Team-scoped ballots and vote casting for Laravel Afterburner Jetstream.
 
 ## Installation
+
+### Local Development Setup
+
+For local development, add the package as a path repository:
+
+```bash
+composer config repositories.afterburner-voting path ../afterburner-voting
+composer require laravel-afterburner/voting:@dev
+```
+
+### Quick Install
 
 ```bash
 composer require laravel-afterburner/voting
@@ -225,3 +236,7 @@ Do not use raw `bg-indigo-*` classes for buttons. Do not use text labels like "R
 ```bash
 php artisan vendor:publish --tag=afterburner-voting-assets --force
 ```
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
