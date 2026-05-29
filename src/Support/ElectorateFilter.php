@@ -43,7 +43,7 @@ class ElectorateFilter
         return $ballot->team
             ->users()
             ->get()
-            ->filter(fn (User $user) => $user->hasPermission('vote_resolutions', $ballot->team_id))
+            ->filter(fn (User $user) => TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions'))
             ->pipe(fn (Collection $users) => $this->filterUsers($users, $ballot))
             ->count();
     }

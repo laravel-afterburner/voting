@@ -116,5 +116,7 @@
                 </div>
             @endif
         </div>
+    @elseif (\Afterburner\Voting\Support\DocumentsIntegration::shouldPromptInstall())
+        @include('afterburner-voting::components.documents-install-prompt', ['context' => 'ballot'])
     @endif
 </div>

@@ -26,6 +26,12 @@ return [
 
     'allow_proxy_votes' => env('AFTERBURNER_VOTING_ALLOW_PROXY', true),
 
+    /*
+    | Class implementing ProxyGrantResolver for proxy management UI.
+    | When null, the proxy route returns 404 and no proxy nav item is shown.
+    */
+    'proxy_grant_resolver' => env('AFTERBURNER_VOTING_PROXY_GRANT_RESOLVER'),
+
     'allow_vote_revocation' => env('AFTERBURNER_VOTING_ALLOW_VOTE_REVOCATION', false),
 
     'schedule_transitions' => env('AFTERBURNER_VOTING_SCHEDULE_TRANSITIONS', true),

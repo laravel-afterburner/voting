@@ -1,7 +1,7 @@
 <div>
     <x-form-section>
         <x-slot name="title">
-            Voting defaults
+            Voting
         </x-slot>
 
         <x-slot name="description">

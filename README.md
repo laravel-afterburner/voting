@@ -156,7 +156,7 @@ Attendance tracking is intentionally deferred to a future meetings package.
 
 ## Team voting settings
 
-Team admins can configure defaults at `/teams/{team}/voting-settings`:
+Team admins can configure defaults in **System Settings → Voting** (`/teams/{team}/system-settings`):
 
 | Setting | Purpose |
 |---------|---------|
@@ -190,7 +190,9 @@ The package fires `BallotPublished` but does not send email. A stub listener `Se
 - `/teams/{team}/ballots/{ballot}` — ballot detail and voting
 - `/teams/{team}/ballots/{ballot}/results` — results after close
 - `/teams/{team}/ballots/{ballot}/results/export` — CSV (default) or PDF (`?format=pdf`)
-- `/teams/{team}/voting-settings` — team voting defaults (team admins)
+- `/teams/{team}/voting/proxies` — proxy vote management (when `AFTERBURNER_VOTING_PROXY_GRANT_RESOLVER` is configured)
+
+Team voting defaults are configured under **System Settings → Voting** (`/teams/{team}/system-settings`).
 
 ## Testing
 

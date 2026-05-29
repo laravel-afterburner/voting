@@ -22,12 +22,6 @@ class InstallCommand extends Command
             '--force' => true,
         ]);
 
-        $this->info('Publishing migrations...');
-        $this->call('vendor:publish', [
-            '--tag' => 'afterburner-voting-migrations',
-            '--force' => true,
-        ]);
-
         $this->info('Publishing views...');
         $this->call('vendor:publish', [
             '--tag' => 'afterburner-voting-assets',
@@ -55,7 +49,8 @@ class InstallCommand extends Command
         $this->comment('1. Add the HasVoting trait to App\\Models\\Team');
         $this->comment('2. For strata apps, implement a custom VoterEligibilityResolver');
         $this->comment('3. Visit /teams/{team}/ballots to start using voting');
-        $this->comment('4. Configure team defaults at /teams/{team}/voting-settings');
+        $this->comment('4. Configure team defaults in System Settings → Voting');
+        $this->comment('Note: Voting migrations load automatically from the package.');
 
         return Command::SUCCESS;
     }

@@ -122,6 +122,8 @@
             'teamId' => $team->id,
             'ballotId' => $ballot->id,
         ], key('ballot-documents-'.$ballot->id))
+    @elseif (\Afterburner\Voting\Support\DocumentsIntegration::shouldPromptInstall())
+        @include('afterburner-voting::components.documents-install-prompt', ['context' => 'ballot'])
     @endif
 
     @if ($canVote)

@@ -9,6 +9,8 @@ use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Support\BallotParticipation;
 use Afterburner\Voting\Support\ElectorateFilter;
+use Afterburner\Voting\Support\TeamPermissionGate;
+use Afterburner\Voting\Support\TeamVotingSettings;
 use Afterburner\Voting\Support\VoterUnit;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -36,7 +38,7 @@ class DefaultUserVoterEligibilityResolver implements VoterEligibilityResolver
             }
         }
 
-        if (config('afterburner-voting.allow_proxy_votes', true)) {
+        if (TeamVotingSettings::allowProxyVotesForTeam($ballot->team)) {
             $proxyUnits = ProxyVote::query()
                 ->where('ballot_id', $ballot->id)
                 ->where('proxy_holder_user_id', $user->id)
@@ -77,7 +79,7 @@ class DefaultUserVoterEligibilityResolver implements VoterEligibilityResolver
             return $this->electorateFilter->userMeetsElectorate($user, $ballot);
         }
 
-        if (! config('afterburner-voting.allow_proxy_votes', true)) {
+        if (! TeamVotingSettings::allowProxyVotesForTeam($ballot->team)) {
             return false;
         }
 
@@ -136,7 +138,7 @@ class DefaultUserVoterEligibilityResolver implements VoterEligibilityResolver
     protected function userCanParticipate(User $user, Ballot $ballot): bool
     {
         return $user->belongsToTeam($ballot->team)
-            && $user->hasPermission('vote_resolutions', $ballot->team_id);
+            && TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions');
     }
 
     protected function unitIsEligibleToCast(Ballot $ballot, VoterUnit $unit): bool

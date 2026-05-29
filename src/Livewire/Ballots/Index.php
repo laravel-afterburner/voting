@@ -28,6 +28,8 @@ class Index extends Component
             abort(403, 'Access denied.');
         }
 
+        abort_unless(Auth::user()->can('viewAny', Ballot::class), 403);
+
         $this->teamId = $team->id;
     }
 

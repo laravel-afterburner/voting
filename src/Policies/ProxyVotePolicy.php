@@ -4,6 +4,8 @@ namespace Afterburner\Voting\Policies;
 
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\ProxyVote;
+use Afterburner\Voting\Support\SubscriptionEntitlementGate;
+use Afterburner\Voting\Support\TeamPermissionGate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
@@ -17,15 +19,19 @@ class ProxyVotePolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_proxy_votes', $ballot->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_proxy_votes')) {
             return true;
         }
 
         if ($grantorVoterUnitType === User::class && $grantorVoterUnitId === $user->id) {
-            return $user->hasPermission('vote_resolutions', $ballot->team_id);
+            return TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions');
         }
 
-        return $user->hasPermission('vote_resolutions', $ballot->team_id);
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions');
     }
 
     public function revoke(User $user, ProxyVote $proxy): bool
@@ -34,8 +40,11 @@ class ProxyVotePolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_proxy_votes', $proxy->team_id)
-            || $user->hasPermission('manage_ballots', $proxy->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($proxy->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allowsAny($user, $proxy->team_id, ['manage_proxy_votes', 'manage_ballots'])) {
             return true;
         }
 
@@ -52,8 +61,12 @@ class ProxyVotePolicy
 
         $ballot = $proxy->ballot;
 
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
         return $ballot->isOpen()
             && $user->belongsToTeam($ballot->team)
-            && $user->hasPermission('vote_resolutions', $ballot->team_id);
+            && TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions');
     }
 }

@@ -10,6 +10,7 @@ use Afterburner\Voting\Models\BallotOption;
 use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Support\BallotParticipation;
+use Afterburner\Voting\Support\TeamVotingSettings;
 use App\Models\User;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
@@ -120,6 +121,10 @@ class CastVote
                 return null;
             }
 
+            if (! TeamVotingSettings::allowProxyVotesForTeam($ballot->team)) {
+                return null;
+            }
+
             $proxy = ProxyVote::query()
                 ->where('ballot_id', $ballot->id)
                 ->where('proxy_holder_user_id', $user->id)
@@ -135,7 +140,7 @@ class CastVote
             return $proxy;
         }
 
-        if (! config('afterburner-voting.allow_proxy_votes', true)) {
+        if (! TeamVotingSettings::allowProxyVotesForTeam($ballot->team)) {
             throw new VotingException('Proxy votes are not enabled.');
         }
 

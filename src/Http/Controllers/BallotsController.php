@@ -12,6 +12,7 @@ class BallotsController
     public function index(Team $team): View
     {
         $this->ensureTeamAccess($team);
+        abort_unless(Auth::user()->can('viewAny', Ballot::class), 403);
 
         return view('afterburner-voting::ballots.index', [
             'team' => $team,

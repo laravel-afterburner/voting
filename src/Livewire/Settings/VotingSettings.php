@@ -83,6 +83,8 @@ class VotingSettings extends Component
         $this->banner($value
             ? __('Proxy votes enabled for this team.')
             : __('Proxy votes disabled for this team.'));
+
+        $this->dispatch('refresh-navigation-menu');
     }
 
     public function updatedLockDesignationDuringOpenBallots(bool $value): void

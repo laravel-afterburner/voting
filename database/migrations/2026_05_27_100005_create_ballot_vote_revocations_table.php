@@ -25,10 +25,21 @@ return new class extends Migration
                 'ballot_vote_revocations_ballot_voter_unit_unique'
             );
         });
+
+        Schema::create('team_voting_settings', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('team_id')->unique()->constrained('teams')->cascadeOnDelete();
+            $table->decimal('default_quorum_percent', 5, 2)->nullable();
+            $table->string('default_vote_visibility')->default('visible_after_close');
+            $table->boolean('allow_proxy_votes')->default(true);
+            $table->boolean('lock_designation_during_open_ballots')->default(false);
+            $table->timestamps();
+        });
     }
 
     public function down(): void
     {
+        Schema::dropIfExists('team_voting_settings');
         Schema::dropIfExists('ballot_vote_revocations');
     }
 };

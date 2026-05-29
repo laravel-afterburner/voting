@@ -1,7 +1,7 @@
 {
     "name": "laravel-afterburner/voting",
     "description": "Team-scoped voting and ballots for Afterburner applications",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "library",
     "license": "MIT",
     "require": {
@@ -21,6 +21,7 @@
         "psr-4": {
             "Afterburner\\Voting\\Tests\\": "tests/",
             "App\\Models\\": "tests/Fixtures/Models/",
+            "App\\Support\\": "tests/Fixtures/Support/",
             "App\\Traits\\": "tests/Fixtures/Traits/"
         }
     },

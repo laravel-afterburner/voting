@@ -2,7 +2,7 @@
 
 use Afterburner\Voting\Http\Controllers\BallotsController;
 use Afterburner\Voting\Http\Controllers\ExportBallotResultsController;
-use Afterburner\Voting\Http\Controllers\VotingSettingsController;
+use Afterburner\Voting\Http\Controllers\ProxiesController;
 use Afterburner\Voting\Models\Ballot;
 use Illuminate\Support\Facades\Route;
 
@@ -28,7 +28,6 @@ Route::middleware(['web', 'auth', 'verified'])->group(function () {
         ->name('teams.ballots.edit')
         ->middleware('can:update,ballot');
 
-    Route::get('/teams/{team}/voting-settings', VotingSettingsController::class)
-        ->name('teams.voting-settings')
-        ->middleware('can:update,team');
+    Route::get('/teams/{team}/voting/proxies', ProxiesController::class)
+        ->name('teams.voting.proxies');
 });

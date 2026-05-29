@@ -9,6 +9,8 @@ use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Services\BallotTallyService;
 use Afterburner\Voting\Support\BallotParticipation;
+use Afterburner\Voting\Support\SubscriptionEntitlementGate;
+use Afterburner\Voting\Support\TeamPermissionGate;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -24,8 +26,11 @@ class BallotPolicy
 
     public function viewAny(User $user): bool
     {
-        return (bool) $user->currentTeam?->id
-            && $user->belongsToTeam($user->currentTeam);
+        if (! $user->currentTeam?->id || ! $user->belongsToTeam($user->currentTeam)) {
+            return false;
+        }
+
+        return SubscriptionEntitlementGate::allows($user->currentTeam);
     }
 
     public function view(User $user, Ballot $ballot): bool
@@ -34,9 +39,15 @@ class BallotPolicy
             return false;
         }
 
-        return $user->hasPermission('vote_resolutions', $ballot->team_id)
-            || $user->hasPermission('create_resolutions', $ballot->team_id)
-            || $user->hasPermission('manage_ballots', $ballot->team_id);
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        return TeamPermissionGate::allowsAny($user, $ballot->team_id, [
+            'vote_resolutions',
+            'create_resolutions',
+            'manage_ballots',
+        ]);
     }
 
     public function create(User $user, Team $team): bool
@@ -45,7 +56,11 @@ class BallotPolicy
             return false;
         }
 
-        return $user->hasPermission('create_resolutions', $team->id);
+        if (! SubscriptionEntitlementGate::allows($team)) {
+            return false;
+        }
+
+        return TeamPermissionGate::allows($user, $team->id, 'create_resolutions');
     }
 
     public function update(User $user, Ballot $ballot): bool
@@ -54,11 +69,15 @@ class BallotPolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_ballots', $ballot->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
             return true;
         }
 
-        return $user->hasPermission('create_resolutions', $ballot->team_id)
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'create_resolutions')
             && $ballot->created_by_user_id === $user->id;
     }
 
@@ -73,11 +92,15 @@ class BallotPolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_ballots', $ballot->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
             return true;
         }
 
-        return $user->hasPermission('create_resolutions', $ballot->team_id)
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'create_resolutions')
             && $ballot->created_by_user_id === $user->id;
     }
 
@@ -87,7 +110,11 @@ class BallotPolicy
             return false;
         }
 
-        if (! $user->hasPermission('vote_resolutions', $ballot->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (! TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions')) {
             return false;
         }
 
@@ -100,11 +127,17 @@ class BallotPolicy
             return false;
         }
 
-        $canViewResults = $user->hasPermission('view_ballot_results', $ballot->team_id)
-            || $user->hasPermission('create_resolutions', $ballot->team_id)
-            || $user->hasPermission('manage_ballots', $ballot->team_id);
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
 
-        if (! $canViewResults && ! $user->hasPermission('vote_resolutions', $ballot->team_id)) {
+        $canViewResults = TeamPermissionGate::allowsAny($user, $ballot->team_id, [
+            'view_ballot_results',
+            'create_resolutions',
+            'manage_ballots',
+        ]);
+
+        if (! $canViewResults && ! TeamPermissionGate::allows($user, $ballot->team_id, 'vote_resolutions')) {
             return false;
         }
 
@@ -134,6 +167,10 @@ class BallotPolicy
             return false;
         }
 
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
         if (BallotParticipation::unitHasRevocation($ballot, $voterUnitType, $voterUnitId)) {
             return false;
         }
@@ -142,7 +179,7 @@ class BallotPolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_ballots', $ballot->team_id)) {
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
             return true;
         }
 
@@ -160,7 +197,11 @@ class BallotPolicy
             return false;
         }
 
-        return $user->hasPermission('export_ballot_results', $ballot->team_id)
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'export_ballot_results')
             && $this->viewResults($user, $ballot);
     }
 
@@ -170,11 +211,15 @@ class BallotPolicy
             return false;
         }
 
-        if ($user->hasPermission('manage_ballots', $ballot->team_id)) {
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
             return true;
         }
 
-        return $user->hasPermission('create_resolutions', $ballot->team_id)
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'create_resolutions')
             && $ballot->created_by_user_id === $user->id;
     }
 
@@ -184,16 +229,20 @@ class BallotPolicy
             return false;
         }
 
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
         if ($ballot->isEditable()) {
             return $this->update($user, $ballot);
         }
 
         if ($ballot->status === BallotStatus::Open) {
-            if ($user->hasPermission('manage_ballots', $ballot->team_id)) {
+            if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
                 return true;
             }
 
-            return $user->hasPermission('create_resolutions', $ballot->team_id)
+            return TeamPermissionGate::allows($user, $ballot->team_id, 'create_resolutions')
                 && $ballot->created_by_user_id === $user->id;
         }
 

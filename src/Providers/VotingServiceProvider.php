@@ -5,7 +5,9 @@ namespace Afterburner\Voting\Providers;
 use Afterburner\Voting\Console\Commands\InstallCommand;
 use Afterburner\Voting\Console\Commands\ProcessScheduledBallotsCommand;
 use Afterburner\Voting\Contracts\CustomElectorateResolver;
+use Afterburner\Voting\Contracts\ProxyGrantResolver;
 use Afterburner\Voting\Contracts\VoterEligibilityResolver;
+use Afterburner\Voting\Database\Seeders\VotingPermissionsSeeder;
 use Afterburner\Voting\Events\BallotPublished;
 use Afterburner\Voting\Listeners\SendBallotPublishedVoterNotifications;
 use Afterburner\Voting\Livewire\Ballots\BallotDocuments;
@@ -14,15 +16,19 @@ use Afterburner\Voting\Livewire\Ballots\Index;
 use Afterburner\Voting\Livewire\Ballots\Results;
 use Afterburner\Voting\Livewire\Ballots\Show;
 use Afterburner\Voting\Livewire\Ballots\VoteForm;
+use Afterburner\Voting\Livewire\Proxies\Manager as ProxyManager;
 use Afterburner\Voting\Livewire\Settings\VotingSettings;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Policies\BallotPolicy;
 use Afterburner\Voting\Policies\ProxyVotePolicy;
 use Afterburner\Voting\Support\DocumentsIntegration;
+use Afterburner\Voting\Support\SubscriptionEntitlementGate;
+use Afterburner\Voting\Support\TeamVotingSettings;
 use App\Models\Team;
 use App\Support\Navigation;
-use App\Support\TeamNavigation;
+use App\Support\PackageSeederRegistry;
+use App\Support\SystemSettings;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Facades\Event;
@@ -57,7 +63,28 @@ class VotingServiceProvider extends ServiceProvider
             return $app->make($class);
         });
 
+        $this->registerProxyGrantResolver();
+
         $this->validateCustomElectorateResolver();
+    }
+
+    protected function registerProxyGrantResolver(): void
+    {
+        $class = config('afterburner-voting.proxy_grant_resolver');
+
+        if ($class === null || $class === '') {
+            return;
+        }
+
+        if (! is_string($class) || ! class_exists($class)) {
+            throw new \InvalidArgumentException('Invalid AFTERBURNER_VOTING_PROXY_GRANT_RESOLVER configuration.');
+        }
+
+        if (! is_subclass_of($class, ProxyGrantResolver::class)) {
+            throw new \InvalidArgumentException("{$class} must implement ".ProxyGrantResolver::class);
+        }
+
+        $this->app->singleton(ProxyGrantResolver::class, fn (Application $app) => $app->make($class));
     }
 
     protected function validateCustomElectorateResolver(): void
@@ -107,9 +134,10 @@ class VotingServiceProvider extends ServiceProvider
         $this->registerPolicies();
         $this->registerAuditSkipRoutes();
         $this->registerNavigation();
-        $this->registerTeamNavigation();
+        $this->registerSystemSettings();
         $this->registerEventListeners();
         $this->registerSchedule();
+        $this->registerPackageSeeder();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -144,6 +172,10 @@ class VotingServiceProvider extends ServiceProvider
         }
 
         Livewire::component('voting.settings.voting-settings', VotingSettings::class);
+
+        if (config('afterburner-voting.proxy_grant_resolver')) {
+            Livewire::component('voting.proxy-manager', ProxyManager::class);
+        }
     }
 
     protected function registerPolicies(): void
@@ -174,7 +206,9 @@ class VotingServiceProvider extends ServiceProvider
             return;
         }
 
-        Navigation::register([
+        $proxyNavItem = $this->proxyNavigationItem();
+
+        $item = [
             'label' => 'Voting',
             'route' => 'teams.ballots.index',
             'route_params' => function () {
@@ -187,28 +221,66 @@ class VotingServiceProvider extends ServiceProvider
             },
             'icon' => 'ticket',
             'order' => 25,
-            'permission' => function ($user) {
+            'permission' => function ($user) use ($proxyNavItem) {
                 if (! $user || ! $user->currentTeam) {
                     return false;
                 }
 
-                return $user->can('viewAny', Ballot::class);
-            },
-            'active' => function () {
-                return request()->routeIs('teams.ballots.*');
-            },
-        ]);
-    }
+                if ($user->can('viewAny', Ballot::class)) {
+                    return true;
+                }
 
-    protected function registerTeamNavigation(): void
-    {
-        if (! class_exists(TeamNavigation::class)) {
-            return;
+                return $proxyNavItem !== null
+                    && isset($proxyNavItem['permission'])
+                    && is_callable($proxyNavItem['permission'])
+                    && $proxyNavItem['permission']($user);
+            },
+            'active' => function () use ($proxyNavItem) {
+                $routes = ['teams.ballots.*'];
+
+                if ($proxyNavItem !== null) {
+                    $routes[] = 'teams.voting.proxies';
+                }
+
+                return request()->routeIs(...$routes);
+            },
+        ];
+
+        if ($proxyNavItem !== null) {
+            $item['children'] = [
+                [
+                    'label' => 'Ballots',
+                    'route' => 'teams.ballots.index',
+                    'route_params' => function () {
+                        $user = auth()->user();
+                        if (! $user || ! $user->currentTeam) {
+                            return [];
+                        }
+
+                        return ['team' => $user->currentTeam->id];
+                    },
+                    'permission' => fn ($user) => $user?->can('viewAny', Ballot::class) ?? false,
+                    'active' => fn () => request()->routeIs('teams.ballots.*'),
+                ],
+                $proxyNavItem,
+            ];
         }
 
-        TeamNavigation::register([
-            'label' => 'Voting Settings',
-            'route' => 'teams.voting-settings',
+        Navigation::register($item);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function proxyNavigationItem(): ?array
+    {
+        if (empty(config('afterburner-voting.proxy_grant_resolver'))) {
+            return null;
+        }
+
+        return [
+            'label' => 'Proxy votes',
+            'route' => 'teams.voting.proxies',
             'route_params' => function () {
                 $user = auth()->user();
                 if (! $user || ! $user->currentTeam) {
@@ -217,16 +289,54 @@ class VotingServiceProvider extends ServiceProvider
 
                 return ['team' => $user->currentTeam->id];
             },
-            'order' => 16,
             'permission' => function ($user) {
                 if (! $user || ! $user->currentTeam) {
                     return false;
                 }
 
-                return $user->can('update', $user->currentTeam);
+                if (! TeamVotingSettings::allowProxyVotesForTeam($user->currentTeam)) {
+                    return false;
+                }
+
+                if (! SubscriptionEntitlementGate::allows($user->currentTeam)) {
+                    return false;
+                }
+
+                if (! app()->bound(ProxyGrantResolver::class)) {
+                    return false;
+                }
+
+                return app(ProxyGrantResolver::class)->userCanAccess($user, $user->currentTeam);
             },
-            'active' => function () {
-                return request()->routeIs('teams.voting-settings');
+            'active' => fn () => request()->routeIs('teams.voting.proxies'),
+        ];
+    }
+
+    protected function registerSystemSettings(): void
+    {
+        if (! class_exists(SystemSettings::class)) {
+            return;
+        }
+
+        if (! config('afterburner-voting.enabled', true)) {
+            return;
+        }
+
+        SystemSettings::register([
+            'key' => 'voting',
+            'order' => 20,
+            'component' => 'voting.settings.voting-settings',
+            'params' => fn ($team) => ['team' => $team],
+            'permission' => function ($user) {
+                if (! $user || ! $user->currentTeam) {
+                    return false;
+                }
+
+                if (! SubscriptionEntitlementGate::allows($user->currentTeam)) {
+                    return false;
+                }
+
+                return $user->can('update', $user->currentTeam);
             },
         ]);
     }
@@ -237,5 +347,12 @@ class VotingServiceProvider extends ServiceProvider
             BallotPublished::class,
             SendBallotPublishedVoterNotifications::class
         );
+    }
+
+    protected function registerPackageSeeder(): void
+    {
+        if (class_exists(PackageSeederRegistry::class)) {
+            PackageSeederRegistry::register(VotingPermissionsSeeder::class);
+        }
     }
 }

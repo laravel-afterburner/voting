@@ -6,6 +6,7 @@ use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Services\BallotResultsExportService;
 use Afterburner\Voting\Services\BallotResultsPdfExporter;
 use Afterburner\Voting\Services\BallotTallyService;
+use Afterburner\Voting\Support\TeamPermissionGate;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class ExportBallotResultsController
             abort(404);
         }
 
-        abort_unless($user->hasPermission('export_ballot_results', $team->id), 403);
+        abort_unless(TeamPermissionGate::allows($user, $team->id, 'export_ballot_results'), 403);
         abort_unless($user->can('viewResults', $ballot), 403);
         abort_unless($tallyService->canViewTally($ballot), 403);
 
