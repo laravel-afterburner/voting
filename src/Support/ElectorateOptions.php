@@ -70,7 +70,7 @@ class ElectorateOptions
         $hierarchyField = self::hierarchyField();
 
         if ($hierarchyField !== null) {
-            $query->orderByDesc($hierarchyField);
+            $query->orderBy($hierarchyField);
         } else {
             $query->orderBy('name');
         }

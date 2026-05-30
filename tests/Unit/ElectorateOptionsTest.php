@@ -12,8 +12,8 @@ class ElectorateOptionsTest extends TestCase
     public function test_for_select_includes_all_members_and_roles(): void
     {
         DB::table('roles')->insert([
-            ['name' => 'President', 'slug' => 'president', 'hierarchy' => 90, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Owner', 'slug' => 'strata_owner', 'hierarchy' => 10, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'President', 'slug' => 'president', 'hierarchy' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Owner', 'slug' => 'strata_owner', 'hierarchy' => 5, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $options = ElectorateOptions::forSelect();
@@ -39,7 +39,7 @@ class ElectorateOptionsTest extends TestCase
         DB::table('roles')->insert([
             'name' => 'Treasurer',
             'slug' => 'treasurer',
-            'hierarchy' => 80,
+            'hierarchy' => 2,
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -66,8 +66,8 @@ class ElectorateOptionsTest extends TestCase
     public function test_electorate_labels_multiple_roles(): void
     {
         DB::table('roles')->insert([
-            ['name' => 'President', 'slug' => 'president', 'hierarchy' => 90, 'created_at' => now(), 'updated_at' => now()],
-            ['name' => 'Treasurer', 'slug' => 'treasurer', 'hierarchy' => 80, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'President', 'slug' => 'president', 'hierarchy' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['name' => 'Treasurer', 'slug' => 'treasurer', 'hierarchy' => 2, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $electorate = Electorate::from('["president","treasurer"]');

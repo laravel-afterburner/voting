@@ -1,18 +1,18 @@
 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
     <form wire:submit.prevent="saveDraft" class="space-y-6">
-        <div class="max-w-2xl">
+        <div>
             <x-label for="title" value="Title" />
             <x-input id="title" type="text" class="mt-1 block w-full" wire:model="title" />
             <x-input-error for="title" class="mt-2" />
         </div>
 
-        <div class="max-w-2xl">
+        <div>
             <x-label for="description" value="Description" />
             <x-textarea-input id="description" wire:model="description" rows="4" class="mt-1 block w-full" />
             <x-input-error for="description" class="mt-2" />
         </div>
 
-        <div class="flex flex-wrap gap-4">
+        <div class="flex flex-wrap items-start gap-4">
             <div class="w-44">
                 <x-label for="type" value="Type" />
                 <x-select-input id="type" wire:model="type" class="mt-1 block w-full">
@@ -21,14 +21,13 @@
                     <option value="election">Election</option>
                 </x-select-input>
             </div>
-            <div class="min-w-52 max-w-md">
+            <div class="min-w-52 flex-1">
                 <x-label for="electorate" value="Electorate" />
-                <x-select-input id="electorate" wire:model.live="electorate" class="mt-1 block w-full" multiple size="8">
-                    @foreach ($electorateOptions as $option)
-                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
-                    @endforeach
-                </x-select-input>
-                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select one or more roles, or choose All members alone.</p>
+                <x-afterburner-voting::electorate-select
+                    id="electorate"
+                    :options="$electorateOptions"
+                    :selected="$electorate"
+                />
                 <x-input-error for="electorate" class="mt-2" />
                 <x-input-error for="electorate.*" class="mt-2" />
             </div>
@@ -43,13 +42,13 @@
         </div>
 
         <div class="flex flex-wrap gap-4">
-            <div class="max-w-xs">
+            <div class="w-full max-w-xs">
                 <x-label for="opensAt" value="Opens at *" />
                 <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezone }}, required to publish)</p>
                 <x-input id="opensAt" type="datetime-local" class="mt-1 block w-full" wire:model="opensAt" />
                 <x-input-error for="opensAt" class="mt-2" />
             </div>
-            <div class="max-w-xs">
+            <div class="w-full max-w-xs">
                 <x-label for="closesAt" value="Closes at *" />
                 <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezone }}, required to publish)</p>
                 <x-input id="closesAt" type="datetime-local" class="mt-1 block w-full" wire:model="closesAt" />
@@ -64,7 +63,7 @@
                     Add option
                 </button>
             </div>
-            <div class="mt-3 max-w-xl space-y-3">
+            <div class="mt-3 space-y-3">
                 @foreach ($options as $index => $option)
                     <div class="flex items-start gap-3">
                         <x-input
