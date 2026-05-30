@@ -1,14 +1,14 @@
 <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
     <form wire:submit.prevent="saveDraft" class="space-y-6">
-        <div class="max-w-xl">
+        <div class="max-w-2xl">
             <x-label for="title" value="Title" />
             <x-input id="title" type="text" class="mt-1 block w-full" wire:model="title" />
             <x-input-error for="title" class="mt-2" />
         </div>
 
-        <div>
+        <div class="max-w-2xl">
             <x-label for="description" value="Description" />
-            <x-textarea-input id="description" wire:model="description" rows="4" class="mt-1 block w-full max-w-2xl" />
+            <x-textarea-input id="description" wire:model="description" rows="4" class="mt-1 block w-full" />
             <x-input-error for="description" class="mt-2" />
         </div>
 
@@ -21,13 +21,24 @@
                     <option value="election">Election</option>
                 </x-select-input>
             </div>
-            <div class="w-44">
+            <div class="min-w-52 max-w-md">
                 <x-label for="electorate" value="Electorate" />
-                <x-select-input id="electorate" wire:model="electorate" class="mt-1 block w-full">
-                    <option value="all_members">All Members</option>
-                    <option value="council">Council</option>
-                    <option value="custom">Custom</option>
+                <x-select-input id="electorate" wire:model.live="electorate" class="mt-1 block w-full" multiple size="8">
+                    @foreach ($electorateOptions as $option)
+                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                    @endforeach
                 </x-select-input>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">Select one or more roles, or choose All members alone.</p>
+                <x-input-error for="electorate" class="mt-2" />
+                <x-input-error for="electorate.*" class="mt-2" />
+            </div>
+            <div class="w-28 overflow-visible">
+                <div class="flex items-center gap-1.5">
+                    <x-label for="quorumPercent" value="Quorum %" />
+                    <x-afterburner-voting::info-hint text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum." />
+                </div>
+                <x-input id="quorumPercent" type="number" step="0.01" min="0" max="100" class="mt-1 block w-full" wire:model="quorumPercent" />
+                <x-input-error for="quorumPercent" class="mt-2" />
             </div>
         </div>
 
@@ -44,12 +55,6 @@
                 <x-input id="closesAt" type="datetime-local" class="mt-1 block w-full" wire:model="closesAt" />
                 <x-input-error for="closesAt" class="mt-2" />
             </div>
-        </div>
-
-        <div class="w-28">
-            <x-label for="quorumPercent" value="Quorum %" />
-            <x-input id="quorumPercent" type="number" step="0.01" min="0" max="100" class="mt-1 block w-full" wire:model="quorumPercent" />
-            <x-input-error for="quorumPercent" class="mt-2" />
         </div>
 
         <div>

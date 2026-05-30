@@ -2,9 +2,11 @@
 
 namespace Afterburner\Voting\Support;
 
+use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\BallotVoteRevocation;
+use App\Models\User;
 
 class BallotParticipation
 {
@@ -30,5 +32,12 @@ class BallotParticipation
     {
         return self::unitHasResponse($ballot, $voterUnitType, $voterUnitId)
             || self::unitHasRevocation($ballot, $voterUnitType, $voterUnitId);
+    }
+
+    public static function userHasPendingVote(User $user, Ballot $ballot, VoterEligibilityResolver $resolver): bool
+    {
+        return $resolver->eligibleVoterUnits($user, $ballot)->contains(
+            fn (VoterUnit $unit) => $resolver->canCastVote($user, $ballot, $unit->type, $unit->id),
+        );
     }
 }

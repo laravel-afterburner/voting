@@ -6,8 +6,10 @@ use Afterburner\Voting\Actions\CreateBallot;
 use Afterburner\Voting\Actions\PublishBallot;
 use Afterburner\Voting\Concerns\FlashesNativeBanner;
 use Afterburner\Voting\Enums\BallotType;
-use Afterburner\Voting\Enums\ElectorateType;
 use Afterburner\Voting\Enums\VoteVisibility;
+use Afterburner\Voting\Support\Electorate;
+use Afterburner\Voting\Support\ElectorateOptions;
+use Illuminate\Validation\Rule;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Support\TeamDateTime;
 use Afterburner\Voting\Support\TeamVotingSettings;
@@ -31,7 +33,8 @@ class Create extends Component
 
     public string $type = 'resolution';
 
-    public string $electorate = 'all_members';
+    /** @var array<int, string> */
+    public array $electorate = ['all_members'];
 
     public string $voteVisibility = 'visible_after_close';
 
@@ -65,7 +68,7 @@ class Create extends Component
             $this->title = $ballot->title;
             $this->description = $ballot->description ?? '';
             $this->type = $ballot->type->value;
-            $this->electorate = $ballot->electorate->value;
+            $this->electorate = $ballot->electorate->toSelection();
             $this->voteVisibility = $ballot->vote_visibility->value;
             $this->opensAt = TeamDateTime::toDateTimeLocal($team, $ballot->opens_at);
             $this->closesAt = TeamDateTime::toDateTimeLocal($team, $ballot->closes_at);
@@ -79,6 +82,22 @@ class Create extends Component
             $this->voteVisibility = TeamVotingSettings::defaultVoteVisibilityForTeam($team)->value;
             $quorum = TeamVotingSettings::defaultQuorumPercentForTeam($team);
             $this->quorumPercent = $quorum !== null ? (string) $quorum : null;
+        }
+    }
+
+    public function updatedElectorate(): void
+    {
+        if ($this->electorate === []) {
+            $this->electorate = ['all_members'];
+
+            return;
+        }
+
+        if (in_array('all_members', $this->electorate, true) && count($this->electorate) > 1) {
+            $this->electorate = array_values(array_filter(
+                $this->electorate,
+                fn (string $value) => $value !== 'all_members',
+            ));
         }
     }
 
@@ -138,7 +157,8 @@ class Create extends Component
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'type' => 'required|in:poll,resolution,election',
-            'electorate' => 'required|in:all_members,council,custom',
+            'electorate' => ['required', 'array', 'min:1'],
+            'electorate.*' => ['required', 'string', Rule::in(ElectorateOptions::allowedValues($this->electorate))],
             'voteVisibility' => 'required|in:secret,visible_after_close,visible_realtime',
             'opensAt' => 'required|date',
             'closesAt' => 'required|date|after:opensAt',
@@ -153,7 +173,8 @@ class Create extends Component
             'title' => 'required|string|max:255',
             'description' => 'nullable|string|max:5000',
             'type' => 'required|in:poll,resolution,election',
-            'electorate' => 'required|in:all_members,council,custom',
+            'electorate' => ['required', 'array', 'min:1'],
+            'electorate.*' => ['required', 'string', Rule::in(ElectorateOptions::allowedValues($this->electorate))],
             'voteVisibility' => 'required|in:secret,visible_after_close,visible_realtime',
             'options' => 'required|array|min:2',
             'options.*.label' => 'required|string|max:255',
@@ -175,7 +196,7 @@ class Create extends Component
                 'title' => $this->title,
                 'description' => $this->description ?: null,
                 'type' => BallotType::from($this->type),
-                'electorate' => ElectorateType::from($this->electorate),
+                'electorate' => Electorate::fromSelection($this->electorate),
                 'vote_visibility' => VoteVisibility::from($this->voteVisibility),
                 'opens_at' => $opensAt,
                 'closes_at' => $closesAt,
@@ -201,7 +222,7 @@ class Create extends Component
             $this->title,
             $this->description ?: null,
             BallotType::from($this->type),
-            ElectorateType::from($this->electorate),
+            Electorate::fromSelection($this->electorate),
             $options,
             VoteVisibility::from($this->voteVisibility),
             $this->quorumPercent !== null && $this->quorumPercent !== '' ? (float) $this->quorumPercent : null,
@@ -219,6 +240,7 @@ class Create extends Component
             'team' => $team,
             'isEditing' => $this->ballotId !== null,
             'scheduleTimezone' => TeamDateTime::teamTimezone($team),
+            'electorateOptions' => ElectorateOptions::forSelect($this->electorate),
         ]);
     }
 }

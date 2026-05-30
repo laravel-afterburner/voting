@@ -75,6 +75,7 @@ class Show extends Component
                 request()->userAgent(),
             );
             $this->banner(__('Your vote has been revoked.'));
+            $this->dispatch('refresh-notifications');
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
         }

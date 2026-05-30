@@ -5,7 +5,7 @@ namespace Afterburner\Voting\Models;
 use Afterburner\Voting\Concerns\HasLinkedDocuments;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
-use Afterburner\Voting\Enums\ElectorateType;
+use Afterburner\Voting\Casts\ElectorateCast;
 use Afterburner\Voting\Enums\VoteVisibility;
 use App\Models\Team;
 use App\Models\User;
@@ -42,7 +42,7 @@ class Ballot extends Model
     protected $casts = [
         'type' => BallotType::class,
         'status' => BallotStatus::class,
-        'electorate' => ElectorateType::class,
+        'electorate' => ElectorateCast::class,
         'vote_visibility' => VoteVisibility::class,
         'allow_abstain' => 'boolean',
         'allow_multiple_selections' => 'boolean',

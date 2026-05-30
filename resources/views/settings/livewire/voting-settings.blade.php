@@ -11,7 +11,10 @@
         <x-slot name="form">
             <div class="col-span-6 space-y-6">
                 <div>
-                    <x-label for="defaultQuorumPercent" value="Default quorum (%)" />
+                    <div class="flex items-center gap-1.5">
+                        <x-label for="defaultQuorumPercent" value="Default quorum (%)" />
+                        <x-afterburner-voting::info-hint text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum." />
+                    </div>
                     <x-input
                         id="defaultQuorumPercent"
                         type="number"

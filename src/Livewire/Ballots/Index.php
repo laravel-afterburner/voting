@@ -2,6 +2,7 @@
 
 namespace Afterburner\Voting\Livewire\Ballots;
 
+use Afterburner\Voting\Support\BallotParticipation;
 use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Models\Ballot;
@@ -67,7 +68,7 @@ class Index extends Component
             ->forTeam($this->teamId)
             ->where('status', BallotStatus::Open)
             ->get()
-            ->filter(fn (Ballot $ballot) => $resolver->eligibleVoterUnits($user, $ballot)->isNotEmpty())
+            ->filter(fn (Ballot $ballot) => BallotParticipation::userHasPendingVote($user, $ballot, $resolver))
             ->count();
     }
 

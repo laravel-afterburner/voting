@@ -119,6 +119,54 @@ class Phase2GovernanceTest extends TestCase
         $this->assertFalse(Gate::forUser($owner)->allows('vote', $ballot));
     }
 
+    public function test_role_electorate_limits_voting_to_role_holders(): void
+    {
+        config(['afterburner-voting.eligibility_resolver' => DefaultUserVoterEligibilityResolver::class]);
+        $this->app->forgetInstance(VoterEligibilityResolver::class);
+
+        [$creator, $team] = $this->createTeamWithUser(['create_resolutions']);
+        $owner = $this->createAdditionalUser($team, ['vote_resolutions'], 'owner@example.com');
+        $this->assignRoleToUser($owner, $team, 'strata_owner');
+
+        $president = $this->createAdditionalUser($team, ['vote_resolutions'], 'president@example.com');
+        $this->assignRoleToUser($president, $team, 'president');
+
+        $ballot = $this->createOpenBallot($team, $creator, [
+            'electorate' => 'president',
+        ]);
+
+        $resolver = app(VoterEligibilityResolver::class);
+
+        $this->assertTrue($resolver->canCastVote($president, $ballot, User::class, $president->id));
+        $this->assertFalse($resolver->canCastVote($owner, $ballot, User::class, $owner->id));
+    }
+
+    public function test_multi_role_electorate_allows_any_matching_role(): void
+    {
+        config(['afterburner-voting.eligibility_resolver' => DefaultUserVoterEligibilityResolver::class]);
+        $this->app->forgetInstance(VoterEligibilityResolver::class);
+
+        [$creator, $team] = $this->createTeamWithUser(['create_resolutions']);
+        $owner = $this->createAdditionalUser($team, ['vote_resolutions'], 'owner@example.com');
+        $this->assignRoleToUser($owner, $team, 'strata_owner');
+
+        $president = $this->createAdditionalUser($team, ['vote_resolutions'], 'president@example.com');
+        $this->assignRoleToUser($president, $team, 'president');
+
+        $treasurer = $this->createAdditionalUser($team, ['vote_resolutions'], 'treasurer@example.com');
+        $this->assignRoleToUser($treasurer, $team, 'treasurer');
+
+        $ballot = $this->createOpenBallot($team, $creator, [
+            'electorate' => '["president","treasurer"]',
+        ]);
+
+        $resolver = app(VoterEligibilityResolver::class);
+
+        $this->assertTrue($resolver->canCastVote($president, $ballot, User::class, $president->id));
+        $this->assertTrue($resolver->canCastVote($treasurer, $ballot, User::class, $treasurer->id));
+        $this->assertFalse($resolver->canCastVote($owner, $ballot, User::class, $owner->id));
+    }
+
     public function test_quorum_math_with_multi_unit_resolver(): void
     {
         config(['afterburner-voting.eligibility_resolver' => TestMultiUnitVoterEligibilityResolver::class]);

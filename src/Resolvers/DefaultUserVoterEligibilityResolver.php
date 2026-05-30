@@ -3,7 +3,6 @@
 namespace Afterburner\Voting\Resolvers;
 
 use Afterburner\Voting\Contracts\VoterEligibilityResolver;
-use Afterburner\Voting\Enums\ElectorateType;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\ProxyVote;
@@ -58,10 +57,6 @@ class DefaultUserVoterEligibilityResolver implements VoterEligibilityResolver
 
     public function totalEligibleVoterUnits(Ballot $ballot): int
     {
-        if ($ballot->electorate === ElectorateType::Custom) {
-            return $this->electorateFilter->totalEligibleUsers($ballot);
-        }
-
         return $this->electorateFilter->totalEligibleUsers($ballot);
     }
 

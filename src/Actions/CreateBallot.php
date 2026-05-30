@@ -6,6 +6,7 @@ use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
 use Afterburner\Voting\Enums\ElectorateType;
 use Afterburner\Voting\Enums\VoteVisibility;
+use Afterburner\Voting\Support\Electorate;
 use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotOption;
@@ -26,7 +27,7 @@ class CreateBallot
         string $title,
         ?string $description,
         BallotType $type,
-        ElectorateType $electorate,
+        ElectorateType|Electorate|string $electorate,
         array $options = [],
         ?VoteVisibility $voteVisibility = null,
         ?float $quorumPercent = null,
@@ -39,6 +40,8 @@ class CreateBallot
         if ($team->id !== $user->currentTeam?->id && ! $user->belongsToTeam($team)) {
             throw new VotingException('You do not belong to this team.');
         }
+
+        $electorate = Electorate::from($electorate);
 
         return DB::transaction(function () use (
             $team,

@@ -4,7 +4,6 @@ namespace Afterburner\Voting\Actions;
 
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
-use Afterburner\Voting\Enums\ElectorateType;
 use Afterburner\Voting\Events\BallotPublished;
 use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
@@ -33,10 +32,10 @@ class PublishBallot
             throw new VotingException('Close date must be after the open date.');
         }
 
-        return DB::transaction(function () use ($ballot) {
+        return DB::transaction(function () use ($ballot, $user) {
             $ballot->load(['options', 'team']);
 
-            if ($ballot->electorate === ElectorateType::Custom) {
+            if ($ballot->electorate->isCustom()) {
                 $customResolver = config('afterburner-voting.custom_electorate_resolver');
                 if (! is_string($customResolver) || $customResolver === '' || ! class_exists($customResolver)) {
                     throw new VotingException('Custom electorate ballots require AFTERBURNER_VOTING_CUSTOM_ELECTORATE_RESOLVER to be configured.');
@@ -84,7 +83,7 @@ class PublishBallot
 
             $ballot = $ballot->fresh(['options']);
 
-            BallotPublished::dispatch($ballot);
+            BallotPublished::dispatch($ballot, $user->id);
 
             ScheduleBallotTransitions::dispatchFor($ballot);
 

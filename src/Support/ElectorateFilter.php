@@ -3,7 +3,6 @@
 namespace Afterburner\Voting\Support;
 
 use Afterburner\Voting\Contracts\CustomElectorateResolver;
-use Afterburner\Voting\Enums\ElectorateType;
 use Afterburner\Voting\Models\Ballot;
 use App\Models\User;
 use Illuminate\Contracts\Foundation\Application;
@@ -18,11 +17,27 @@ class ElectorateFilter
 
     public function userMeetsElectorate(User $user, Ballot $ballot): bool
     {
-        return match ($ballot->electorate) {
-            ElectorateType::AllMembers => true,
-            ElectorateType::Council => $this->userHasCouncilRole($user, $ballot->team_id),
-            ElectorateType::Custom => $this->customResolver()?->userIsEligible($user, $ballot) ?? false,
-        };
+        $electorate = $ballot->electorate;
+
+        if ($electorate->isAllMembers()) {
+            return true;
+        }
+
+        if ($electorate->isCouncil()) {
+            return $this->userHasCouncilRole($user, $ballot->team_id);
+        }
+
+        if ($electorate->isCustom()) {
+            return $this->customResolver()?->userIsEligible($user, $ballot) ?? false;
+        }
+
+        $roleSlugs = $electorate->roleSlugs();
+
+        if ($roleSlugs === []) {
+            return false;
+        }
+
+        return $this->userHasAnyRole($user, $ballot->team_id, $roleSlugs);
     }
 
     /**
@@ -36,7 +51,7 @@ class ElectorateFilter
 
     public function totalEligibleUsers(Ballot $ballot): int
     {
-        if ($ballot->electorate === ElectorateType::Custom) {
+        if ($ballot->electorate->isCustom()) {
             return $this->customResolver()?->totalEligibleVoterUnits($ballot) ?? 0;
         }
 
@@ -56,11 +71,23 @@ class ElectorateFilter
             return false;
         }
 
+        return $this->userHasAnyRole($user, $teamId, $slugs);
+    }
+
+    /**
+     * @param  array<int, string>  $roleSlugs
+     */
+    protected function userHasAnyRole(User $user, int $teamId, array $roleSlugs): bool
+    {
+        if ($roleSlugs === []) {
+            return false;
+        }
+
         return DB::table('user_role')
             ->join('roles', 'user_role.role_id', '=', 'roles.id')
             ->where('user_role.user_id', $user->id)
             ->where('user_role.team_id', $teamId)
-            ->whereIn('roles.slug', $slugs)
+            ->whereIn('roles.slug', $roleSlugs)
             ->exists();
     }
 
