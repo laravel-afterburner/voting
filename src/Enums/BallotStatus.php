@@ -20,4 +20,18 @@ enum BallotStatus: string
             self::Cancelled => 'Cancelled',
         };
     }
+
+    /**
+     * @return string Tailwind classes for status badges
+     */
+    public function badgeClasses(): string
+    {
+        return match ($this) {
+            self::Draft => 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+            self::Scheduled => 'bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300',
+            self::Open => 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
+            self::Closed => 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400',
+            self::Cancelled => 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+        };
+    }
 }

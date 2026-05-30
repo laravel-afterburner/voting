@@ -80,4 +80,19 @@ class TeamDateTime
     {
         return self::toTeamTimezone($team, $dateTime)?->format($format);
     }
+
+    /**
+     * Format a date for HTML display with ordinal superscript and 12-hour time.
+     * Returns HTML — use with {!! !!} in Blade.
+     */
+    public static function formatDisplay(Team $team, mixed $dateTime, bool $includeTime = true): ?string
+    {
+        $carbon = self::toTeamTimezone($team, $dateTime);
+
+        if (! $carbon) {
+            return null;
+        }
+
+        return format_date_superscript($carbon, $includeTime ? 'datetime' : 'date');
+    }
 }

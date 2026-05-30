@@ -30,41 +30,29 @@
                 <div class="flex shrink-0 items-center gap-2">
                     @can('view', $document)
                         @if ($document->isPreviewableInBrowser())
-                            <button
-                                type="button"
+                            <x-action-icon
+                                type="view"
                                 wire:click="openPreview({{ $document->id }})"
                                 wire:loading.attr="disabled"
-                                class="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded"
                                 title="Preview document"
-                            >
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                            </button>
+                            />
                         @endif
                     @endcan
                     @can('download', $document)
-                        <a href="{{ route('teams.documents.download', ['team' => $team, 'document' => $document]) }}"
-                           class="p-1 text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400 rounded"
-                           title="Download document">
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5m0 0l5-5m-5 5V4"></path>
-                            </svg>
-                        </a>
+                        <x-action-icon
+                            type="download"
+                            href="{{ route('teams.documents.download', ['team' => $team, 'document' => $document]) }}"
+                            title="Download document"
+                        />
                     @endcan
                     @if ($canManageDocuments)
-                        <button
-                            type="button"
+                        <x-action-icon
+                            type="delete"
                             wire:click="detachDocument({{ $document->id }})"
                             wire:loading.attr="disabled"
-                            class="p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400 rounded shrink-0"
+                            class="shrink-0"
                             title="Remove document"
-                        >
-                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                            </svg>
-                        </button>
+                        />
                     @endif
                 </div>
             </div>
@@ -87,7 +75,7 @@
                     <input type="text"
                            wire:model.live.debounce.300ms="documentSearch"
                            placeholder="Search by name or filename"
-                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 sm:text-sm">
+                           class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:focus:border-indigo-600 dark:focus:ring-indigo-600 sm:text-sm">
                 </div>
 
                 <div class="max-h-80 space-y-2 overflow-y-auto">

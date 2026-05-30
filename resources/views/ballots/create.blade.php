@@ -1,8 +1,10 @@
-<x-app-layout title="Create Ballot">
+<x-app-layout :title="\Afterburner\Voting\Support\PageHeader::make('Voting', isset($ballot) ? 'Edit' : 'Create ballot', isset($ballot) ? $ballot->title : null)">
     <x-slot name="header">
-        <h2 class="text-xl font-semibold leading-tight text-gray-800 dark:text-gray-200">
-            {{ isset($ballot) ? 'Edit Ballot' : 'Create Ballot' }}
-        </h2>
+        @if (isset($ballot))
+            <x-afterburner-voting::page-header section="Voting" action="Edit" :detail="$ballot->title" />
+        @else
+            <x-afterburner-voting::page-header section="Voting" action="Create ballot" />
+        @endif
     </x-slot>
 
     <div class="max-w-4xl mx-auto py-10 sm:px-6 lg:px-8">

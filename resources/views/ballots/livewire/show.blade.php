@@ -8,9 +8,20 @@
                     <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">{{ $ballot->description }}</p>
                 @endif
             </div>
-            <span class="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700 dark:bg-gray-700 dark:text-gray-300">
-                {{ $ballot->status->label() }}
-            </span>
+            <div class="flex flex-wrap items-center gap-2">
+                <span @class([
+                    'rounded-full px-3 py-1 text-xs font-medium',
+                    $ballot->status->badgeClasses(),
+                ])>
+                    {{ $ballot->status->label() }}
+                </span>
+
+                @if ($canUpdate)
+                    <x-button type="button" wire:click="editBallot" no-spinner>
+                        Edit ballot
+                    </x-button>
+                @endif
+            </div>
         </div>
 
         <dl class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -25,13 +36,13 @@
             @if ($ballot->opens_at)
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Opens</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ \Afterburner\Voting\Support\TeamDateTime::format($team, $ballot->opens_at) }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}</dd>
                 </div>
             @endif
             @if ($ballot->closes_at)
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Closes</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ \Afterburner\Voting\Support\TeamDateTime::format($team, $ballot->closes_at) }}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}</dd>
                 </div>
             @endif
         </dl>
@@ -61,17 +72,13 @@
                             </p>
                         </div>
                         @if ($allowVoteRevocation && $ballot->isOpen() && auth()->user()->can('revokeVote', [$ballot, $response->voter_unit_type, $response->voter_unit_id]))
-                            <button
-                                type="button"
+                            <x-action-icon
+                                type="delete"
                                 wire:click="revokeVote({{ $response->id }})"
                                 wire:confirm="Revoke this vote? You will not be able to vote again on this ballot for this unit."
-                                class="shrink-0 rounded p-1 text-gray-400 hover:text-red-600 dark:hover:text-red-400"
+                                class="shrink-0"
                                 title="Revoke vote"
-                            >
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"></path>
-                                </svg>
-                            </button>
+                            />
                         @endif
                     </div>
                 @endforeach
@@ -89,11 +96,6 @@
         @endif
 
         <div class="mt-6 flex flex-wrap justify-end gap-3">
-            @if ($canUpdate)
-                <x-secondary-button wire:click="editBallot" no-spinner>
-                    Edit Ballot
-                </x-secondary-button>
-            @endif
             @if ($canDelete)
                 <x-danger-button type="button" wire:click="confirmBallotDeletion" no-spinner>
                     Delete Ballot
