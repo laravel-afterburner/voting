@@ -44,21 +44,6 @@ class Index extends Component
         $this->resetPage();
     }
 
-    public function createBallot()
-    {
-        return $this->redirectRoute('teams.ballots.create', ['team' => $this->teamId]);
-    }
-
-    public function viewBallot(int $ballotId)
-    {
-        return $this->redirectRoute('teams.ballots.show', ['team' => $this->teamId, 'ballot' => $ballotId]);
-    }
-
-    public function editBallot(int $ballotId)
-    {
-        return $this->redirectRoute('teams.ballots.edit', ['team' => $this->teamId, 'ballot' => $ballotId]);
-    }
-
     public function getActionRequiredCountProperty(): int
     {
         $resolver = app(VoterEligibilityResolver::class);

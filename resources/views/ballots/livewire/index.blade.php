@@ -16,7 +16,7 @@
         </div>
 
         @if ($canCreate)
-            <x-button wire:click="createBallot" no-spinner>
+            <x-button href="{{ route('teams.ballots.create', ['team' => $team]) }}" wire:navigate>
                 Create ballot
             </x-button>
         @endif
@@ -47,13 +47,13 @@
                 @forelse ($ballots as $ballot)
                     <tr class="group hover:bg-gray-50 dark:hover:bg-gray-700/50" wire:key="ballot-row-{{ $ballot->id }}">
                         <td class="px-6 py-4">
-                            <button
-                                type="button"
-                                wire:click="viewBallot({{ $ballot->id }})"
+                            <a
+                                href="{{ route('teams.ballots.show', ['team' => $team, 'ballot' => $ballot]) }}"
+                                wire:navigate
                                 class="text-left text-sm font-medium text-gray-900 hover:text-indigo-600 dark:text-gray-100 dark:hover:text-indigo-400"
                             >
                                 {{ $ballot->title }}
-                            </button>
+                            </a>
                             @if ($ballot->description)
                                 <p class="mt-1 max-w-md truncate text-xs text-gray-500 dark:text-gray-400">
                                     {{ $ballot->description }}
@@ -93,9 +93,9 @@
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
                             <div class="flex items-center justify-end space-x-2">
-                                <x-action-icon type="view" wire:click="viewBallot({{ $ballot->id }})" title="View ballot" />
+                                <x-action-icon type="view" href="{{ route('teams.ballots.show', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate title="View ballot" />
                                 @can('update', $ballot)
-                                    <x-action-icon type="edit" wire:click="editBallot({{ $ballot->id }})" title="Edit ballot" />
+                                    <x-action-icon type="edit" href="{{ route('teams.ballots.edit', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate title="Edit ballot" />
                                 @endcan
                             </div>
                         </td>

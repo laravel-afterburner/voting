@@ -7,6 +7,8 @@ use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\VoteVisibility;
 use Afterburner\Voting\Models\Ballot;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 
 class BallotTallyService
 {
@@ -103,34 +105,61 @@ class BallotTallyService
             return [];
         }
 
-        $weighted = $this->usesWeightedTally();
-
         return $ballot->responses()
             ->with(['option', 'castBy'])
             ->orderBy('cast_at')
             ->get()
-            ->map(function ($response) use ($ballot, $weighted) {
-                $row = [
-                    'voter_unit_label' => $this->resolver->voterUnitLabel(
-                        $response->voter_unit_type,
-                        $response->voter_unit_id,
-                    ),
-                    'option_label' => $response->option->label,
-                    'cast_by_name' => $response->castBy->name,
-                    'cast_at' => $response->cast_at->toDateTimeString(),
-                    'via_proxy' => $response->proxy_vote_id !== null,
-                ];
-
-                if ($weighted) {
-                    $row['weight'] = $this->resolver->voterUnitWeight(
-                        $ballot,
-                        $response->voter_unit_type,
-                        $response->voter_unit_id,
-                    );
-                }
-
-                return $row;
-            })
+            ->map(fn ($response) => $this->mapResponseDetail($ballot, $response))
             ->all();
+    }
+
+    public function paginatedResponseDetails(
+        Ballot $ballot,
+        int $perPage = 25,
+        string $pageName = 'responsesPage',
+    ): LengthAwarePaginator {
+        if (! $this->canViewResponseDetails($ballot)) {
+            return new Paginator([], 0, $perPage, 1, ['pageName' => $pageName]);
+        }
+
+        return $ballot->responses()
+            ->with(['option', 'castBy'])
+            ->orderBy('cast_at')
+            ->paginate($perPage, pageName: $pageName)
+            ->through(fn ($response) => $this->mapResponseDetail($ballot, $response));
+    }
+
+    /**
+     * @return array{
+     *     voter_unit_label: string,
+     *     option_label: string,
+     *     cast_by_name: string,
+     *     cast_at: string,
+     *     via_proxy: bool,
+     *     weight?: float
+     * }
+     */
+    protected function mapResponseDetail(Ballot $ballot, $response): array
+    {
+        $row = [
+            'voter_unit_label' => $this->resolver->voterUnitLabel(
+                $response->voter_unit_type,
+                $response->voter_unit_id,
+            ),
+            'option_label' => $response->option->label,
+            'cast_by_name' => $response->castBy->name,
+            'cast_at' => $response->cast_at->toDateTimeString(),
+            'via_proxy' => $response->proxy_vote_id !== null,
+        ];
+
+        if ($this->usesWeightedTally()) {
+            $row['weight'] = $this->resolver->voterUnitWeight(
+                $ballot,
+                $response->voter_unit_type,
+                $response->voter_unit_id,
+            );
+        }
+
+        return $row;
     }
 }

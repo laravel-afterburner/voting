@@ -8,9 +8,12 @@ use Afterburner\Voting\Services\QuorumService;
 use App\Models\Team;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Results extends Component
 {
+    use WithPagination;
+
     public int $teamId;
 
     public int $ballotId;
@@ -51,7 +54,9 @@ class Results extends Component
             'ballot' => $ballot,
             'tally' => $canViewTally ? $tallyService->tally($ballot) : null,
             'quorum' => app(QuorumService::class)->calculate($ballot),
-            'responseDetails' => $canViewTally ? $tallyService->responseDetails($ballot) : [],
+            'responseDetails' => $canViewTally
+                ? $tallyService->paginatedResponseDetails($ballot)
+                : collect(),
             'canViewTally' => $canViewTally,
             'canExport' => Auth::user()->can('exportResults', $ballot),
         ]);

@@ -93,22 +93,6 @@ class Show extends Component
         }
     }
 
-    public function viewResults()
-    {
-        return $this->redirectRoute('teams.ballots.results', [
-            'team' => $this->teamId,
-            'ballot' => $this->ballotId,
-        ]);
-    }
-
-    public function editBallot()
-    {
-        return $this->redirectRoute('teams.ballots.edit', [
-            'team' => $this->teamId,
-            'ballot' => $this->ballotId,
-        ]);
-    }
-
     public function confirmBallotDeletion(): void
     {
         abort_unless(Auth::user()->can('delete', $this->ballot()), 403);

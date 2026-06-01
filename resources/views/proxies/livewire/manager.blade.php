@@ -159,6 +159,10 @@
                         </li>
                     @endforeach
                 </ul>
+
+                <div class="mt-4">
+                    {{ $proxies->links() }}
+                </div>
             @endif
         </x-slot>
     </x-action-section>

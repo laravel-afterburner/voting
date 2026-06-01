@@ -15,10 +15,12 @@ use App\Traits\InteractsWithBanner;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Component;
+use Livewire\WithPagination;
 
 class Manager extends Component
 {
     use InteractsWithBanner;
+    use WithPagination;
 
     public Team $team;
 
@@ -213,7 +215,7 @@ class Manager extends Component
             });
         }
 
-        $proxies = $proxiesQuery->get();
+        $proxies = $proxiesQuery->paginate(15);
         $unitLabelsById = $proxies
             ->pluck('grantor_voter_unit_id')
             ->unique()

@@ -54,7 +54,7 @@
             <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
                 Individual votes are hidden on secret ballots until close.
             </p>
-        @elseif (count($responseDetails) > 0)
+        @elseif ($responseDetails->isNotEmpty())
             <div class="mt-8">
                 <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Vote breakdown</h4>
                 <ul class="mt-3 divide-y divide-gray-200 dark:divide-gray-700">
@@ -68,6 +68,10 @@
                         </li>
                     @endforeach
                 </ul>
+
+                <div class="mt-4">
+                    {{ $responseDetails->links() }}
+                </div>
             </div>
         @endif
     @endif

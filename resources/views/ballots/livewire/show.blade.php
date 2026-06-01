@@ -17,7 +17,7 @@
                 </span>
 
                 @if ($canUpdate)
-                    <x-button type="button" wire:click="editBallot" no-spinner>
+                    <x-button href="{{ route('teams.ballots.edit', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate>
                         Edit ballot
                     </x-button>
                 @endif
@@ -112,7 +112,7 @@
                 </x-secondary-button>
             @endif
             @if ($canViewResults)
-                <x-secondary-button wire:click="viewResults" no-spinner>
+                <x-secondary-button href="{{ route('teams.ballots.results', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate>
                     View Results
                 </x-secondary-button>
             @endif
