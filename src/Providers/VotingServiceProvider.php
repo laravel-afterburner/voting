@@ -27,7 +27,10 @@ use Afterburner\Voting\Support\SubscriptionEntitlementGate;
 use Afterburner\Playbook\Support\Playbook;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use App\Models\Team;
+use App\Support\Audit\AuditCategories;
+use App\Support\DashboardSections;
 use App\Support\Navigation;
+use App\Support\NavigationActive;
 use App\Support\PackageSeederRegistry;
 use App\Support\SystemSettings;
 use Illuminate\Console\Scheduling\Schedule;
@@ -134,7 +137,9 @@ class VotingServiceProvider extends ServiceProvider
         $this->registerLivewireComponents();
         $this->registerPolicies();
         $this->registerAuditSkipRoutes();
+        $this->registerAuditCategories();
         $this->registerNavigation();
+        $this->registerDashboardSections();
         $this->registerPlaybook();
         $this->registerSystemSettings();
         $this->registerEventListeners();
@@ -202,6 +207,17 @@ class VotingServiceProvider extends ServiceProvider
         ]);
     }
 
+    protected function registerAuditCategories(): void
+    {
+        if (! class_exists(AuditCategories::class)) {
+            return;
+        }
+
+        AuditCategories::register([
+            'voting' => 'Voting',
+        ]);
+    }
+
     protected function registerNavigation(): void
     {
         if (! class_exists(Navigation::class)) {
@@ -244,7 +260,7 @@ class VotingServiceProvider extends ServiceProvider
                     $routes[] = 'teams.voting.proxies';
                 }
 
-                return request()->routeIs(...$routes);
+                return NavigationActive::routeIs(...$routes);
             },
         ];
 
@@ -262,13 +278,29 @@ class VotingServiceProvider extends ServiceProvider
                         return ['team' => $user->currentTeam->id];
                     },
                     'permission' => fn ($user) => $user?->can('viewAny', Ballot::class) ?? false,
-                    'active' => fn () => request()->routeIs('teams.ballots.*'),
+                    'active' => fn () => NavigationActive::routeIs('teams.ballots.*'),
                 ],
                 $proxyNavItem,
             ];
         }
 
         Navigation::register($item);
+    }
+
+    protected function registerDashboardSections(): void
+    {
+        if (! class_exists(DashboardSections::class)) {
+            return;
+        }
+
+        DashboardSections::register([
+            'key' => 'kpi.ballots',
+            'label' => 'Open ballots',
+            'description' => 'Ballots currently open for voting.',
+            'group' => 'Overview metrics',
+            'group_order' => 10,
+            'order' => 40,
+        ]);
     }
 
     protected function registerPlaybook(): void
@@ -326,7 +358,7 @@ class VotingServiceProvider extends ServiceProvider
 
                 return app(ProxyGrantResolver::class)->userCanAccess($user, $user->currentTeam);
             },
-            'active' => fn () => request()->routeIs('teams.voting.proxies'),
+            'active' => fn () => NavigationActive::routeIs('teams.voting.proxies'),
         ];
     }
 

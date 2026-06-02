@@ -13,7 +13,11 @@
                 <div>
                     <div class="flex items-center gap-1.5">
                         <x-label for="defaultQuorumPercent" value="Default quorum (%)" />
-                        <x-afterburner-voting::info-hint text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum." />
+                        <x-afterburner-voting::info-hint
+                            label="Quorum requirement"
+                            text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum."
+                            width="w-64"
+                        />
                     </div>
                     <x-input
                         id="defaultQuorumPercent"
@@ -22,7 +26,7 @@
                         max="100"
                         step="0.01"
                         class="mt-1 block w-full max-w-xs"
-                        wire:model.blur="defaultQuorumPercent"
+                        wire:model="defaultQuorumPercent"
                         placeholder="No quorum requirement"
                     />
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
@@ -35,7 +39,7 @@
                     <x-label for="defaultVoteVisibility" value="Default vote visibility" />
                     <select
                         id="defaultVoteVisibility"
-                        wire:model.live="defaultVoteVisibility"
+                        wire:model="defaultVoteVisibility"
                         class="mt-1 block w-full max-w-md border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                     >
                         @foreach ($visibilityOptions as $option)
@@ -48,7 +52,7 @@
                 <label class="flex items-start gap-3">
                     <input
                         type="checkbox"
-                        wire:model.live="allowProxyVotes"
+                        wire:model="allowProxyVotes"
                         class="mt-1 rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900"
                     />
                     <span>
@@ -64,7 +68,7 @@
                 <label class="flex items-start gap-3">
                     <input
                         type="checkbox"
-                        wire:model.live="lockDesignationDuringOpenBallots"
+                        wire:model="lockDesignationDuringOpenBallots"
                         class="mt-1 rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900"
                     />
                     <span>
@@ -77,6 +81,16 @@
                     </span>
                 </label>
             </div>
+        </x-slot>
+
+        <x-slot name="actions">
+            <x-action-message class="me-3" on="saved">
+                Saved.
+            </x-action-message>
+
+            <x-button type="button" wire:click="save" wire:loading.attr="disabled" wire:target="save" no-spinner>
+                Save
+            </x-button>
         </x-slot>
     </x-form-section>
 </div>

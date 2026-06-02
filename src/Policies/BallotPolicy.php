@@ -73,7 +73,7 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'edit_ballots')) {
             return true;
         }
 
@@ -96,7 +96,7 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'close_ballots')) {
             return true;
         }
 
@@ -179,7 +179,7 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
+        if (TeamPermissionGate::allowsAny($user, $ballot->team_id, ['edit_ballots', 'close_ballots', 'delete_ballots', 'cancel_ballots'])) {
             return true;
         }
 
@@ -215,7 +215,7 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
+        if (TeamPermissionGate::allows($user, $ballot->team_id, 'delete_ballots')) {
             return true;
         }
 
@@ -238,7 +238,7 @@ class BallotPolicy
         }
 
         if ($ballot->status === BallotStatus::Open) {
-            if (TeamPermissionGate::allows($user, $ballot->team_id, 'manage_ballots')) {
+            if (TeamPermissionGate::allowsAny($user, $ballot->team_id, ['edit_ballots', 'close_ballots'])) {
                 return true;
             }
 

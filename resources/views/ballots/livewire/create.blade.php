@@ -34,7 +34,11 @@
             <div class="w-28 overflow-visible">
                 <div class="flex items-center gap-1.5">
                     <x-label for="quorumPercent" value="Quorum %" />
-                    <x-afterburner-voting::info-hint text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum." />
+                    <x-afterburner-voting::info-hint
+                        label="Quorum requirement"
+                        text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum."
+                        width="w-64"
+                    />
                 </div>
                 <x-input id="quorumPercent" type="number" step="0.01" min="0" max="100" class="mt-1 block w-full" wire:model="quorumPercent" />
                 <x-input-error for="quorumPercent" class="mt-2" />

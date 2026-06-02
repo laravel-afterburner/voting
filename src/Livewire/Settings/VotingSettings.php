@@ -4,15 +4,14 @@ namespace Afterburner\Voting\Livewire\Settings;
 
 use Afterburner\Voting\Enums\VoteVisibility;
 use Afterburner\Voting\Support\TeamVotingSettings;
+use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\Team;
-use App\Traits\InteractsWithBanner;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Livewire\Component;
 
 class VotingSettings extends Component
 {
-    use InteractsWithBanner;
-
     public Team $team;
 
     public ?string $defaultQuorumPercent = null;
@@ -39,64 +38,41 @@ class VotingSettings extends Component
         $this->lockDesignationDuringOpenBallots = $settings->lock_designation_during_open_ballots;
     }
 
-    public function updatedDefaultQuorumPercent(?string $value): void
+    public function save(): void
     {
         Gate::authorize('update', $this->team);
 
         $validated = $this->validate([
             'defaultQuorumPercent' => 'nullable|numeric|min:0|max:100',
+            'defaultVoteVisibility' => 'required|in:secret,visible_after_close,visible_realtime',
+            'allowProxyVotes' => 'boolean',
+            'lockDesignationDuringOpenBallots' => 'boolean',
         ]);
 
         $settings = TeamVotingSettings::forTeam($this->team);
+        $previousAllowProxyVotes = $settings->allow_proxy_votes;
+
         $settings->update([
             'default_quorum_percent' => filled($validated['defaultQuorumPercent'])
                 ? (float) $validated['defaultQuorumPercent']
                 : null,
+            'default_vote_visibility' => VoteVisibility::from($validated['defaultVoteVisibility']),
+            'allow_proxy_votes' => $validated['allowProxyVotes'],
+            'lock_designation_during_open_ballots' => $validated['lockDesignationDuringOpenBallots'],
         ]);
 
-        $this->banner(__('Default quorum updated.'));
-    }
+        if ($previousAllowProxyVotes !== $validated['allowProxyVotes']) {
+            $this->dispatch('refresh-navigation-menu');
+        }
 
-    public function updatedDefaultVoteVisibility(string $value): void
-    {
-        Gate::authorize('update', $this->team);
-
-        $this->validate([
-            'defaultVoteVisibility' => 'required|in:secret,visible_after_close,visible_realtime',
+        VotingAuditLogger::settingsUpdated($this->team, Auth::user(), [
+            'default_quorum_percent' => $validated['defaultQuorumPercent'] ?? null,
+            'default_vote_visibility' => $validated['defaultVoteVisibility'],
+            'allow_proxy_votes' => $validated['allowProxyVotes'],
+            'lock_designation_during_open_ballots' => $validated['lockDesignationDuringOpenBallots'],
         ]);
 
-        $settings = TeamVotingSettings::forTeam($this->team);
-        $settings->update([
-            'default_vote_visibility' => VoteVisibility::from($value),
-        ]);
-
-        $this->banner(__('Default vote visibility updated.'));
-    }
-
-    public function updatedAllowProxyVotes(bool $value): void
-    {
-        Gate::authorize('update', $this->team);
-
-        $settings = TeamVotingSettings::forTeam($this->team);
-        $settings->update(['allow_proxy_votes' => $value]);
-
-        $this->banner($value
-            ? __('Proxy votes enabled for this team.')
-            : __('Proxy votes disabled for this team.'));
-
-        $this->dispatch('refresh-navigation-menu');
-    }
-
-    public function updatedLockDesignationDuringOpenBallots(bool $value): void
-    {
-        Gate::authorize('update', $this->team);
-
-        $settings = TeamVotingSettings::forTeam($this->team);
-        $settings->update(['lock_designation_during_open_ballots' => $value]);
-
-        $this->banner($value
-            ? __('Designated voter changes will be locked while ballots are open.')
-            : __('Designated voter changes are allowed during open ballots.'));
+        $this->dispatch('saved');
     }
 
     public function render()

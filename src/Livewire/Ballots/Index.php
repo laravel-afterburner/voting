@@ -17,12 +17,6 @@ class Index extends Component
 
     public int $teamId;
 
-    public string $tab = 'open';
-
-    protected $queryString = [
-        'tab' => ['except' => 'open'],
-    ];
-
     public function mount(Team $team): void
     {
         if (! Auth::user()->belongsToTeam($team)) {
@@ -32,16 +26,6 @@ class Index extends Component
         abort_unless(Auth::user()->can('viewAny', Ballot::class), 403);
 
         $this->teamId = $team->id;
-    }
-
-    public function setTab(string $tab): void
-    {
-        if (! in_array($tab, ['open', 'upcoming', 'closed'], true)) {
-            return;
-        }
-
-        $this->tab = $tab;
-        $this->resetPage();
     }
 
     public function getActionRequiredCountProperty(): int
@@ -60,16 +44,13 @@ class Index extends Component
     public function render()
     {
         $team = Team::query()->findOrFail($this->teamId);
-        $query = Ballot::query()->forTeam($this->teamId)->with('creator');
 
-        $query = match ($this->tab) {
-            'open' => $query->where('status', BallotStatus::Open),
-            'upcoming' => $query->whereIn('status', [BallotStatus::Draft, BallotStatus::Scheduled]),
-            'closed' => $query->whereIn('status', [BallotStatus::Closed, BallotStatus::Cancelled]),
-            default => $query,
-        };
-
-        $ballots = $query->orderByDesc('published_at')->orderByDesc('created_at')->paginate(15);
+        $ballots = Ballot::query()
+            ->forTeam($this->teamId)
+            ->with('creator')
+            ->orderByDesc('published_at')
+            ->orderByDesc('created_at')
+            ->paginate(15);
 
         return view('afterburner-voting::ballots.livewire.index', [
             'team' => $team,

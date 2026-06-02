@@ -4,6 +4,7 @@ namespace Afterburner\Voting\Support;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Support\PermissionCatalog;
 
 final class TeamPermissionGate
 {
@@ -12,6 +13,10 @@ final class TeamPermissionGate
      */
     public static function allowsAny(User $user, int $teamId, array $permissions): bool
     {
+        if (class_exists(PermissionCatalog::class)) {
+            return PermissionCatalog::allowsAny($user, $teamId, $permissions);
+        }
+
         if (self::ownsTeam($user, $teamId)) {
             return true;
         }

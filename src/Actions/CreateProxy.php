@@ -6,6 +6,7 @@ use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Support\TeamVotingSettings;
+use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -51,7 +52,7 @@ class CreateProxy
         }
 
         return DB::transaction(function () use ($ballot, $grantedBy, $proxyHolder, $grantorVoterUnitType, $grantorVoterUnitId, $validFrom, $validUntil) {
-            return ProxyVote::query()->create([
+            $proxy = ProxyVote::query()->create([
                 'team_id' => $ballot->team_id,
                 'ballot_id' => $ballot->id,
                 'grantor_voter_unit_type' => $grantorVoterUnitType,
@@ -61,6 +62,10 @@ class CreateProxy
                 'valid_from' => $validFrom ?? now(),
                 'valid_until' => $validUntil,
             ]);
+
+            VotingAuditLogger::proxyCreated($proxy, $grantedBy);
+
+            return $proxy;
         });
     }
 }

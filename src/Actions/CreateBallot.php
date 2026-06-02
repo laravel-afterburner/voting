@@ -11,6 +11,7 @@ use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotOption;
 use Afterburner\Voting\Support\TeamVotingSettings;
+use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -81,7 +82,11 @@ class CreateBallot
                 ]);
             }
 
-            return $ballot->fresh(['options']);
+            $ballot = $ballot->fresh(['options']);
+
+            VotingAuditLogger::ballotCreated($ballot, $user);
+
+            return $ballot;
         });
     }
 }

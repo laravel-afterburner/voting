@@ -1,21 +1,45 @@
 @props([
-    'text',
+    'label',
+    'text' => null,
+    'width' => 'w-56',
+    'scrollable' => false,
 ])
 
-<span {{ $attributes->merge(['class' => 'group relative inline-flex shrink-0']) }}>
+@php
+    $panelClasses = trim("absolute left-0 top-full z-50 mt-1 {$width} rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800");
+    $contentClasses = $scrollable ? 'max-h-48 overflow-y-auto' : '';
+@endphp
+
+<span
+    {{ $attributes->merge(['class' => 'relative inline-flex shrink-0']) }}
+    x-data="{ tooltipOpen: false }"
+    @click.away="tooltipOpen = false"
+>
     <button
         type="button"
-        class="rounded text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-1 dark:text-gray-500 dark:hover:text-gray-300 dark:focus:ring-offset-gray-800"
-        aria-label="{{ $text }}"
+        @click="tooltipOpen = ! tooltipOpen"
+        class="inline-flex rounded-full text-gray-500 hover:text-gray-600 focus:outline-none active:text-gray-500 dark:text-gray-400 dark:hover:text-gray-300 dark:active:text-gray-400"
+        aria-label="{{ $label }}"
+        :aria-expanded="tooltipOpen"
     >
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4" aria-hidden="true">
-            <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+        <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
         </svg>
     </button>
-    <span
+    <div
+        x-show="tooltipOpen"
+        x-cloak
+        x-transition
+        @click.away="tooltipOpen = false"
         role="tooltip"
-        class="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 hidden w-56 -translate-x-1/2 rounded-md bg-gray-900 px-3 py-2 text-left text-xs font-normal normal-case tracking-normal text-white shadow-lg group-hover:block group-focus-within:block dark:bg-gray-700"
+        class="{{ $panelClasses }}"
     >
-        {{ $text }}
-    </span>
+        <div @class([$contentClasses => $scrollable])>
+            @if (filled($text))
+                <p class="text-xs text-gray-600 dark:text-gray-400">{{ $text }}</p>
+            @else
+                {{ $slot }}
+            @endif
+        </div>
+    </div>
 </span>

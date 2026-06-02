@@ -5,22 +5,13 @@
         </div>
     @endif
 
-    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div class="w-full sm:w-auto sm:min-w-[12rem]">
-            <x-label for="ballotTab" value="Show" />
-            <x-select-input id="ballotTab" wire:model.live="tab" class="mt-1 block w-full">
-                <option value="open">Open</option>
-                <option value="upcoming">Upcoming</option>
-                <option value="closed">Closed</option>
-            </x-select-input>
-        </div>
-
-        @if ($canCreate)
+    @if ($canCreate)
+        <div class="mb-6 flex justify-end">
             <x-button href="{{ route('teams.ballots.create', ['team' => $team]) }}" wire:navigate>
                 Create ballot
             </x-button>
-        @endif
-    </div>
+        </div>
+    @endif
 
     <div class="overflow-hidden bg-white shadow sm:rounded-lg dark:bg-gray-800">
         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
@@ -66,9 +57,9 @@
                         <td class="whitespace-nowrap px-6 py-4 text-sm">
                             <span @class([
                                 'inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium',
-                                $ballot->status->badgeClasses(),
+                                $ballot->status->listPhaseBadgeClasses(),
                             ])>
-                                {{ $ballot->status->label() }}
+                                {{ $ballot->status->listPhaseLabel() }}
                             </span>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
@@ -103,7 +94,7 @@
                 @empty
                     <tr>
                         <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
-                            No ballots in this list yet.
+                            No ballots yet.
                         </td>
                     </tr>
                 @endforelse
