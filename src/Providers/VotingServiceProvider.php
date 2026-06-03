@@ -145,6 +145,7 @@ class VotingServiceProvider extends ServiceProvider
         $this->registerEventListeners();
         $this->registerSchedule();
         $this->registerPackageSeeder();
+        $this->registerSubscriptionPackageFeatures();
 
         if ($this->app->runningInConsole()) {
             $this->commands([
@@ -404,5 +405,18 @@ class VotingServiceProvider extends ServiceProvider
         if (class_exists(PackageSeederRegistry::class)) {
             PackageSeederRegistry::register(VotingPermissionsSeeder::class);
         }
+    }
+
+    protected function registerSubscriptionPackageFeatures(): void
+    {
+        if (! class_exists(\Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::class)) {
+            return;
+        }
+
+        \Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::register('voting', 'Voting', [
+            'Electronic ballots',
+            'Proxy voting',
+            'Results & reporting',
+        ]);
     }
 }
