@@ -16,7 +16,6 @@
                         <x-afterburner-voting::info-hint
                             label="Quorum requirement"
                             text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum."
-                            width="w-64"
                         />
                     </div>
                     <x-input
@@ -41,10 +40,9 @@
                         <x-afterburner-voting::info-hint
                             label="Default vote visibility"
                             :scrollable="true"
-                            width="w-72"
                         >
                             @foreach ($visibilityOptions as $option)
-                                <p @class(['text-xs text-gray-600 dark:text-gray-400', 'mt-2' => ! $loop->first])>
+                                <p>
                                     <span class="font-medium text-gray-700 dark:text-gray-300">{{ $option->label() }}:</span>
                                     {{ $option->description() }}
                                 </p>

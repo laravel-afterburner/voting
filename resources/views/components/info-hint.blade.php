@@ -1,13 +1,23 @@
 @props([
     'label',
     'text' => null,
-    'width' => 'w-56',
+    'maxWidth' => null,
+    'align' => 'start',
     'scrollable' => false,
 ])
 
 @php
-    $panelClasses = trim("absolute left-0 top-full z-50 mt-1 {$width} rounded-lg border border-gray-200 bg-white p-3 shadow-lg dark:border-gray-700 dark:bg-gray-800");
-    $contentClasses = $scrollable ? 'max-h-48 overflow-y-auto' : '';
+    $maxWidthClass = $maxWidth ?? ($scrollable ? 'max-w-md' : 'max-w-sm');
+    $alignClass = $align === 'end' ? 'right-0 left-auto' : 'left-0 right-auto';
+    $panelClasses = trim(implode(' ', [
+        'absolute top-full z-50 mt-1',
+        $alignClass,
+        'w-max min-w-[12rem]',
+        $maxWidthClass,
+        'rounded-lg border border-gray-200 bg-white p-3 shadow-lg',
+        'dark:border-gray-700 dark:bg-gray-800',
+    ]));
+    $contentClasses = $scrollable ? 'max-h-60 overflow-y-auto pr-1' : '';
 @endphp
 
 <span
@@ -36,9 +46,11 @@
     >
         <div @class([$contentClasses => $scrollable])>
             @if (filled($text))
-                <p class="text-xs text-gray-600 dark:text-gray-400">{{ $text }}</p>
+                <p class="text-xs leading-relaxed text-wrap text-gray-600 dark:text-gray-400">{{ $text }}</p>
             @else
-                {{ $slot }}
+                <div class="space-y-2 text-xs leading-relaxed text-wrap text-gray-600 dark:text-gray-400">
+                    {{ $slot }}
+                </div>
             @endif
         </div>
     </div>

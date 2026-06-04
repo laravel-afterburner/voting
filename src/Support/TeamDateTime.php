@@ -29,6 +29,44 @@ class TeamDateTime
         return $team->timezone ?? config('app.timezone', 'UTC');
     }
 
+    /**
+     * Short label for ballot schedule hints (e.g. PDT, PST) instead of IANA identifiers.
+     */
+    public static function scheduleTimezoneLabel(Team $team, ?Carbon $at = null): string
+    {
+        $timezone = self::teamTimezone($team);
+
+        if ($timezone === 'UTC') {
+            return 'UTC';
+        }
+
+        try {
+            $at ??= Carbon::now('UTC');
+            $localized = $at->copy()->setTimezone($timezone);
+            $abbreviation = $localized->format('T');
+
+            if (filled($abbreviation) && ! str_contains($abbreviation, '/')) {
+                return $abbreviation;
+            }
+        } catch (\Exception) {
+        }
+
+        return self::regionalTimezoneLabel($timezone);
+    }
+
+    protected static function regionalTimezoneLabel(string $timezone): string
+    {
+        return match ($timezone) {
+            'America/Vancouver', 'America/Los_Angeles', 'America/Tijuana', 'America/Whitehorse' => 'Pacific',
+            'America/Edmonton', 'America/Denver', 'America/Phoenix' => 'Mountain',
+            'America/Winnipeg', 'America/Chicago', 'America/Mexico_City' => 'Central',
+            'America/Toronto', 'America/New_York', 'America/Montreal' => 'Eastern',
+            'America/Halifax', 'America/Moncton' => 'Atlantic',
+            'America/St_Johns' => 'Newfoundland',
+            default => $timezone,
+        };
+    }
+
     public static function toDateTimeLocal(Team $team, mixed $dateTime, ?string $userTimezone = null): ?string
     {
         if (! $dateTime) {

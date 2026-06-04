@@ -296,7 +296,7 @@ class Create extends Component
             'team' => $team,
             'isEditing' => $this->ballotId !== null,
             'voteVisibilityLocked' => $editingBallot?->voteVisibilityIsLocked() ?? false,
-            'scheduleTimezone' => TeamDateTime::teamTimezone($team),
+            'scheduleTimezoneLabel' => TeamDateTime::scheduleTimezoneLabel($team),
             'electorateOptions' => ElectorateOptions::forSelect($this->electorate),
         ]);
     }

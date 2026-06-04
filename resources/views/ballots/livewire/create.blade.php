@@ -37,7 +37,7 @@
                     <x-afterburner-voting::info-hint
                         label="Quorum requirement"
                         text="A quorum is the minimum percentage of eligible voters who must participate before the vote is valid. Leave empty for no minimum."
-                        width="w-64"
+                        align="end"
                     />
                 </div>
                 <x-input id="quorumPercent" type="number" step="0.01" min="0" max="100" class="mt-1 block w-full" wire:model="quorumPercent" />
@@ -45,48 +45,16 @@
             </div>
         </div>
 
-        <div>
-            <label @class([
-                'flex items-start gap-3',
-                'opacity-60' => $voteVisibilityLocked,
-            ])>
-                <input
-                    type="checkbox"
-                    wire:model.live="confidentialVoting"
-                    @disabled($voteVisibilityLocked)
-                    class="mt-1 rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 disabled:cursor-not-allowed"
-                />
-                <span>
-                    <span class="inline-flex items-center gap-1.5 text-sm font-medium text-gray-900 dark:text-gray-100">
-                        Confidential voting
-                        <x-afterburner-voting::info-hint
-                            label="Confidential voting"
-                            text="When enabled, individual choices are never shown in results — only vote totals after the ballot closes. Your own vote is still visible to you on the ballot page."
-                            width="w-72"
-                        />
-                    </span>
-                    <span class="mt-1 block text-sm text-gray-500 dark:text-gray-400">
-                        Hide who voted for which option; results show counts only.
-                    </span>
-                    @if ($voteVisibilityLocked)
-                        <span class="mt-1 block text-sm text-amber-700 dark:text-amber-300">
-                            Locked after publish — vote visibility cannot be changed, so confidential votes cannot be exposed later.
-                        </span>
-                    @endif
-                </span>
-            </label>
-        </div>
-
         <div class="flex flex-wrap gap-4">
             <div class="w-full max-w-xs">
                 <x-label for="opensAt" value="Opens at *" />
-                <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezone }}, required to publish)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezoneLabel }}, required to publish)</p>
                 <x-input id="opensAt" type="datetime-local" class="mt-1 block w-full" wire:model="opensAt" />
                 <x-input-error for="opensAt" class="mt-2" />
             </div>
             <div class="w-full max-w-xs">
                 <x-label for="closesAt" value="Closes at *" />
-                <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezone }}, required to publish)</p>
+                <p class="text-xs text-gray-500 dark:text-gray-400">({{ $scheduleTimezoneLabel }}, required to publish)</p>
                 <x-input id="closesAt" type="datetime-local" class="mt-1 block w-full" wire:model="closesAt" />
                 <x-input-error for="closesAt" class="mt-2" />
             </div>
@@ -119,6 +87,41 @@
                         @endif
                     </div>
                 @endforeach
+            </div>
+        </div>
+
+        <div @class(['flex items-start gap-3', 'opacity-60' => $voteVisibilityLocked])>
+            <input
+                id="confidentialVoting"
+                type="checkbox"
+                wire:model.live="confidentialVoting"
+                @disabled($voteVisibilityLocked)
+                class="mt-1 rounded border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 dark:bg-gray-900 disabled:cursor-not-allowed"
+            />
+            <div class="min-w-0">
+                <div class="inline-flex flex-wrap items-center gap-1.5">
+                    <label
+                        for="confidentialVoting"
+                        @class([
+                            'text-sm font-medium text-gray-900 dark:text-gray-100',
+                            'cursor-pointer' => ! $voteVisibilityLocked,
+                        ])
+                    >
+                        Confidential voting
+                    </label>
+                    <x-afterburner-voting::info-hint
+                        label="Confidential voting"
+                        text="When enabled, individual choices are never shown in results — only vote totals after the ballot closes. Your own vote is still visible to you on the ballot page."
+                    />
+                </div>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Hide who voted for which option; results show counts only.
+                </p>
+                @if ($voteVisibilityLocked)
+                    <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                        Locked after publish — vote visibility cannot be changed, so confidential votes cannot be exposed later.
+                    </p>
+                @endif
             </div>
         </div>
 
