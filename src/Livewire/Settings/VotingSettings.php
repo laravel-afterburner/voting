@@ -16,7 +16,7 @@ class VotingSettings extends Component
 
     public ?string $defaultQuorumPercent = null;
 
-    public string $defaultVoteVisibility = 'visible_after_close';
+    public string $defaultVoteVisibility = 'secret';
 
     public bool $allowProxyVotes = true;
 

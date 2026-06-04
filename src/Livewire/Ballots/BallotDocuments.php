@@ -20,6 +20,8 @@ class BallotDocuments extends Component
 
     public int $ballotId;
 
+    public bool $embedded = false;
+
     public bool $showAttachModal = false;
 
     public bool $showPreviewModal = false;
@@ -28,7 +30,7 @@ class BallotDocuments extends Component
 
     public string $documentSearch = '';
 
-    public function mount(int $teamId, int $ballotId): void
+    public function mount(int $teamId, int $ballotId, bool $embedded = false): void
     {
         abort_unless(DocumentsIntegration::isEnabled(), 404);
 
@@ -42,6 +44,7 @@ class BallotDocuments extends Component
 
         $this->teamId = $teamId;
         $this->ballotId = $ballotId;
+        $this->embedded = $embedded;
     }
 
     public function openAttachModal(): void

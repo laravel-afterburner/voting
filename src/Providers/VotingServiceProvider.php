@@ -26,6 +26,7 @@ use Afterburner\Voting\Support\DocumentsIntegration;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
 use Afterburner\Playbook\Support\Playbook;
 use Afterburner\Voting\Support\TeamVotingSettings;
+use Afterburner\Voting\Support\VotingPermissions;
 use App\Models\Team;
 use App\Support\Audit\AuditCategories;
 use App\Support\DashboardSections;
@@ -245,7 +246,7 @@ class VotingServiceProvider extends ServiceProvider
                     return false;
                 }
 
-                if ($user->can('viewAny', Ballot::class)) {
+                if ($user->currentTeam && VotingPermissions::canAccessModule($user, $user->currentTeam)) {
                     return true;
                 }
 
@@ -278,7 +279,8 @@ class VotingServiceProvider extends ServiceProvider
 
                         return ['team' => $user->currentTeam->id];
                     },
-                    'permission' => fn ($user) => $user?->can('viewAny', Ballot::class) ?? false,
+                    'permission' => fn ($user) => $user?->currentTeam
+                        && VotingPermissions::canViewSection($user, $user->currentTeam, VotingPermissions::SECTION_BALLOTS),
                     'active' => fn () => NavigationActive::routeIs('teams.ballots.*'),
                 ],
                 $proxyNavItem,
@@ -357,7 +359,8 @@ class VotingServiceProvider extends ServiceProvider
                     return false;
                 }
 
-                return app(ProxyGrantResolver::class)->userCanAccess($user, $user->currentTeam);
+                return VotingPermissions::canViewSection($user, $user->currentTeam, VotingPermissions::SECTION_PROXIES)
+                    && app(ProxyGrantResolver::class)->userCanAccess($user, $user->currentTeam);
             },
             'active' => fn () => NavigationActive::routeIs('teams.voting.proxies'),
         ];

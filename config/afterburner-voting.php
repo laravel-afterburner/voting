@@ -17,7 +17,7 @@ return [
 
     'custom_electorate_resolver' => null,
 
-    'default_vote_visibility' => 'visible_after_close',
+    'default_vote_visibility' => 'secret',
 
     'default_quorum_percent' => null,
 

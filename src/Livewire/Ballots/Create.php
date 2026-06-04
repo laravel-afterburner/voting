@@ -37,7 +37,7 @@ class Create extends Component
     /** @var array<int, string> */
     public array $electorate = ['all_members'];
 
-    public string $voteVisibility = 'visible_after_close';
+    public string $voteVisibility = 'secret';
 
     public bool $confidentialVoting = false;
 

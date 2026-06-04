@@ -29,7 +29,7 @@ class TeamVotingSettings
             return $setting->default_vote_visibility;
         }
 
-        return VoteVisibility::from(config('afterburner-voting.default_vote_visibility', 'visible_after_close'));
+        return VoteVisibility::from(config('afterburner-voting.default_vote_visibility', 'secret'));
     }
 
     public static function allowProxyVotesForTeam(Team|int $team): bool
@@ -65,7 +65,7 @@ class TeamVotingSettings
             ['team_id' => $teamId],
             [
                 'default_quorum_percent' => config('afterburner-voting.default_quorum_percent'),
-                'default_vote_visibility' => config('afterburner-voting.default_vote_visibility', 'visible_after_close'),
+                'default_vote_visibility' => config('afterburner-voting.default_vote_visibility', 'secret'),
                 'allow_proxy_votes' => (bool) config('afterburner-voting.allow_proxy_votes', true),
                 'lock_designation_during_open_ballots' => false,
             ]

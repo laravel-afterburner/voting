@@ -11,6 +11,7 @@ use Afterburner\Voting\Services\BallotTallyService;
 use Afterburner\Voting\Support\BallotParticipation;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
 use Afterburner\Voting\Support\TeamPermissionGate;
+use Afterburner\Voting\Support\VotingPermissions;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -30,7 +31,8 @@ class BallotPolicy
             return false;
         }
 
-        return SubscriptionEntitlementGate::allows($user->currentTeam);
+        return SubscriptionEntitlementGate::allows($user->currentTeam)
+            && VotingPermissions::canAccessModule($user, $user->currentTeam);
     }
 
     public function view(User $user, Ballot $ballot): bool

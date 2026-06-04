@@ -27,7 +27,10 @@
                         Status
                     </th>
                     <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
-                        Schedule
+                        Opens
+                    </th>
+                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400">
+                        Closes
                     </th>
                     <th scope="col" class="relative px-6 py-3">
                         <span class="sr-only">Actions</span>
@@ -63,21 +66,15 @@
                             </span>
                         </td>
                         <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
-                            @if ($ballot->opens_at || $ballot->closes_at)
-                                <div class="space-y-1">
-                                    @if ($ballot->opens_at)
-                                        <div>
-                                            <span class="text-xs text-gray-400 dark:text-gray-500">Opens</span>
-                                            <div>{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}</div>
-                                        </div>
-                                    @endif
-                                    @if ($ballot->closes_at)
-                                        <div>
-                                            <span class="text-xs text-gray-400 dark:text-gray-500">Closes</span>
-                                            <div>{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}</div>
-                                        </div>
-                                    @endif
-                                </div>
+                            @if ($ballot->opens_at)
+                                {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
+                            @else
+                                —
+                            @endif
+                        </td>
+                        <td class="whitespace-nowrap px-6 py-4 text-sm text-gray-600 dark:text-gray-400">
+                            @if ($ballot->closes_at)
+                                {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
                             @else
                                 —
                             @endif
@@ -93,7 +90,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
+                        <td colspan="6" class="px-6 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
                             No ballots yet.
                         </td>
                     </tr>

@@ -8,6 +8,17 @@ use Afterburner\Voting\Tests\TestCase;
 
 class TeamVotingSettingsTest extends TestCase
 {
+    public function test_package_default_vote_visibility_is_confidential(): void
+    {
+        [, $team] = $this->createTeamWithUser(['create_resolutions']);
+
+        $this->assertSame(VoteVisibility::Secret, TeamVotingSettings::defaultVoteVisibilityForTeam($team));
+
+        $settings = TeamVotingSettings::forTeam($team);
+
+        $this->assertSame(VoteVisibility::Secret, $settings->default_vote_visibility);
+    }
+
     public function test_for_team_creates_settings_with_config_defaults(): void
     {
         [, $team] = $this->createTeamWithUser(['create_resolutions']);

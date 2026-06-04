@@ -1,19 +1,32 @@
-<div class="mt-6 rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-    <div class="flex flex-wrap items-center justify-between gap-3">
-        <div>
-            <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Supporting documents</h4>
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Reference materials for this ballot.
-            </p>
-        </div>
+<div @class([
+    'rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800' => ! $embedded,
+    'mt-6' => ! $embedded,
+])>
+    @if ($embedded)
         @if ($canManageDocuments)
-            <x-secondary-button type="button" wire:click="openAttachModal" no-spinner>
-                Attach document
-            </x-secondary-button>
+            <div class="mb-4 flex justify-end">
+                <x-secondary-button type="button" wire:click="openAttachModal" no-spinner>
+                    Attach document
+                </x-secondary-button>
+            </div>
         @endif
-    </div>
+    @else
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <div>
+                <h4 class="text-sm font-semibold text-gray-900 dark:text-gray-100">Supporting documents</h4>
+                <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                    Reference materials for this ballot.
+                </p>
+            </div>
+            @if ($canManageDocuments)
+                <x-secondary-button type="button" wire:click="openAttachModal" no-spinner>
+                    Attach document
+                </x-secondary-button>
+            @endif
+        </div>
+    @endif
 
-    <div class="mt-4 space-y-3">
+    <div @class(['mt-4 space-y-3' => ! $embedded, 'space-y-3' => $embedded])>
         @forelse ($linkedDocuments as $document)
             <div class="flex items-center justify-between gap-4 rounded-md border border-gray-200 px-4 py-3 dark:border-gray-600">
                 <div class="flex min-w-0 flex-1 items-start gap-3">
