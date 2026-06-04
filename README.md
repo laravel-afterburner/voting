@@ -237,6 +237,7 @@ Do not use raw `bg-indigo-*` classes for buttons. Do not use text labels like "R
 
 ```bash
 php artisan vendor:publish --tag=afterburner-voting-assets --force
+php artisan view:clear
 ```
 
 ## License
