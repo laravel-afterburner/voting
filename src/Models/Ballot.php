@@ -2,11 +2,12 @@
 
 namespace Afterburner\Voting\Models;
 
+use Afterburner\Voting\Casts\ElectorateCast;
 use Afterburner\Voting\Concerns\HasLinkedDocuments;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
-use Afterburner\Voting\Casts\ElectorateCast;
 use Afterburner\Voting\Enums\VoteVisibility;
+use Afterburner\Voting\Exceptions\VotingException;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,32 @@ class Ballot extends Model
 {
     use HasLinkedDocuments;
     use SoftDeletes;
+
+    protected static function booted(): void
+    {
+        static::updating(function (Ballot $ballot) {
+            if (! $ballot->isDirty('vote_visibility')) {
+                return;
+            }
+
+            if ($ballot->hasBeenPublished()) {
+                throw new VotingException(
+                    'Vote visibility cannot be changed after this ballot has been published or has received confidential votes.',
+                );
+            }
+
+            $original = $ballot->getOriginal('vote_visibility');
+            $originalVisibility = $original instanceof VoteVisibility
+                ? $original
+                : VoteVisibility::from($original);
+
+            if ($originalVisibility->isConfidential() && $ballot->responses()->exists()) {
+                throw new VotingException(
+                    'Vote visibility cannot be changed after this ballot has been published or has received confidential votes.',
+                );
+            }
+        });
+    }
 
     protected $fillable = [
         'team_id',
@@ -106,5 +133,20 @@ class Ballot extends Model
     public function isEditable(): bool
     {
         return in_array($this->status, [BallotStatus::Draft, BallotStatus::Scheduled], true);
+    }
+
+    public function hasBeenPublished(): bool
+    {
+        return $this->published_at !== null;
+    }
+
+    public function voteVisibilityIsLocked(): bool
+    {
+        if ($this->hasBeenPublished()) {
+            return true;
+        }
+
+        return $this->vote_visibility->isConfidential()
+            && $this->responses()->exists();
     }
 }

@@ -36,7 +36,21 @@
                 </div>
 
                 <div>
-                    <x-label for="defaultVoteVisibility" value="Default vote visibility" />
+                    <div class="flex items-center gap-1.5">
+                        <x-label for="defaultVoteVisibility" value="Default vote visibility" />
+                        <x-afterburner-voting::info-hint
+                            label="Default vote visibility"
+                            :scrollable="true"
+                            width="w-72"
+                        >
+                            @foreach ($visibilityOptions as $option)
+                                <p @class(['text-xs text-gray-600 dark:text-gray-400', 'mt-2' => ! $loop->first])>
+                                    <span class="font-medium text-gray-700 dark:text-gray-300">{{ $option->label() }}:</span>
+                                    {{ $option->description() }}
+                                </p>
+                            @endforeach
+                        </x-afterburner-voting::info-hint>
+                    </div>
                     <select
                         id="defaultVoteVisibility"
                         wire:model="defaultVoteVisibility"
@@ -46,6 +60,9 @@
                             <option value="{{ $option->value }}">{{ $option->label() }}</option>
                         @endforeach
                     </select>
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        New ballots inherit this unless you change confidential voting on the ballot form.
+                    </p>
                     <x-input-error for="defaultVoteVisibility" class="mt-2" />
                 </div>
 

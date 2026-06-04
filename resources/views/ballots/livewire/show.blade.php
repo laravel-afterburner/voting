@@ -30,7 +30,7 @@
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $ballot->electorate->label() }}</dd>
             </div>
             <div>
-                <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Visibility</dt>
+                <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Vote visibility</dt>
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{{ $ballot->vote_visibility->label() }}</dd>
             </div>
             @if ($ballot->opens_at)

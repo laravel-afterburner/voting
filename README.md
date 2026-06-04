@@ -161,7 +161,7 @@ Team admins can configure defaults in **System Settings → Voting** (`/teams/{t
 | Setting | Purpose |
 |---------|---------|
 | Default quorum (%) | Applied to new ballots; optional |
-| Default vote visibility | Secret, visible after close, or visible in realtime |
+| Default vote visibility | Confidential, visible after close, or visible in realtime |
 | Allow proxy votes | Team-level toggle (global kill switch in config still applies) |
 | Lock designation during open ballots | Stored preference for host apps; not enforced by this package |
 

@@ -50,9 +50,13 @@
             @endforeach
         </div>
 
-        @if ($ballot->vote_visibility === \Afterburner\Voting\Enums\VoteVisibility::Secret && $ballot->status !== \Afterburner\Voting\Enums\BallotStatus::Closed)
+        @if ($ballot->vote_visibility->isConfidential() && $ballot->status !== \Afterburner\Voting\Enums\BallotStatus::Closed)
             <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
-                Individual votes are hidden on secret ballots until close.
+                Individual votes are hidden on confidential ballots until close. After close, only totals are shown.
+            </p>
+        @elseif ($ballot->vote_visibility->isConfidential())
+            <p class="mt-4 text-xs text-gray-500 dark:text-gray-400">
+                This was a confidential ballot. Individual choices are not shown — only totals.
             </p>
         @elseif ($responseDetails->isNotEmpty())
             <div class="mt-8">

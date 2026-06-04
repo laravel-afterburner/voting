@@ -7,15 +7,16 @@ use Afterburner\Voting\Actions\PublishBallot;
 use Afterburner\Voting\Concerns\FlashesNativeBanner;
 use Afterburner\Voting\Enums\BallotType;
 use Afterburner\Voting\Enums\VoteVisibility;
+use Afterburner\Voting\Models\Ballot;
+use Afterburner\Voting\Support\BallotVoteVisibilityGuard;
 use Afterburner\Voting\Support\Electorate;
 use Afterburner\Voting\Support\ElectorateOptions;
-use Illuminate\Validation\Rule;
-use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Support\TeamDateTime;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use App\Models\Team;
 use App\Traits\InteractsWithBanner;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class Create extends Component
@@ -37,6 +38,8 @@ class Create extends Component
     public array $electorate = ['all_members'];
 
     public string $voteVisibility = 'visible_after_close';
+
+    public bool $confidentialVoting = false;
 
     public ?string $opensAt = null;
 
@@ -83,6 +86,50 @@ class Create extends Component
             $quorum = TeamVotingSettings::defaultQuorumPercentForTeam($team);
             $this->quorumPercent = $quorum !== null ? (string) $quorum : null;
         }
+
+        $this->syncConfidentialFromVisibility();
+    }
+
+    public function updatedConfidentialVoting(bool $value): void
+    {
+        if ($this->isVoteVisibilityLocked()) {
+            $this->syncConfidentialFromVisibility();
+
+            return;
+        }
+
+        $team = Team::query()->findOrFail($this->teamId);
+
+        $this->voteVisibility = $value
+            ? VoteVisibility::Secret->value
+            : $this->nonSecretVoteVisibility($team);
+    }
+
+    protected function isVoteVisibilityLocked(): bool
+    {
+        if ($this->ballotId === null) {
+            return false;
+        }
+
+        $ballot = Ballot::query()->where('team_id', $this->teamId)->find($this->ballotId);
+
+        return $ballot?->voteVisibilityIsLocked() ?? false;
+    }
+
+    protected function syncConfidentialFromVisibility(): void
+    {
+        $this->confidentialVoting = $this->voteVisibility === VoteVisibility::Secret->value;
+    }
+
+    protected function nonSecretVoteVisibility(Team $team): string
+    {
+        $default = TeamVotingSettings::defaultVoteVisibilityForTeam($team);
+
+        if ($default === VoteVisibility::Secret) {
+            return VoteVisibility::VisibleAfterClose->value;
+        }
+
+        return $default->value;
     }
 
     public function updatedElectorate(): void
@@ -192,12 +239,17 @@ class Create extends Component
             $ballot = Ballot::query()->where('team_id', $this->teamId)->findOrFail($this->ballotId);
             abort_unless(Auth::user()->can('update', $ballot), 403);
 
+            $voteVisibility = BallotVoteVisibilityGuard::resolveForUpdate(
+                $ballot,
+                VoteVisibility::from($this->voteVisibility),
+            );
+
             $ballot->update([
                 'title' => $this->title,
                 'description' => $this->description ?: null,
                 'type' => BallotType::from($this->type),
                 'electorate' => Electorate::fromSelection($this->electorate),
-                'vote_visibility' => VoteVisibility::from($this->voteVisibility),
+                'vote_visibility' => $voteVisibility,
                 'opens_at' => $opensAt,
                 'closes_at' => $closesAt,
                 'quorum_percent' => $this->quorumPercent !== null && $this->quorumPercent !== '' ? $this->quorumPercent : null,
@@ -236,9 +288,14 @@ class Create extends Component
     {
         $team = Team::query()->findOrFail($this->teamId);
 
+        $editingBallot = $this->ballotId
+            ? Ballot::query()->where('team_id', $this->teamId)->find($this->ballotId)
+            : null;
+
         return view('afterburner-voting::ballots.livewire.create', [
             'team' => $team,
             'isEditing' => $this->ballotId !== null,
+            'voteVisibilityLocked' => $editingBallot?->voteVisibilityIsLocked() ?? false,
             'scheduleTimezone' => TeamDateTime::teamTimezone($team),
             'electorateOptions' => ElectorateOptions::forSelect($this->electorate),
         ]);
