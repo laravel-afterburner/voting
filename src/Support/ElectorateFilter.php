@@ -65,7 +65,7 @@ class ElectorateFilter
 
     protected function userHasCouncilRole(User $user, int $teamId): bool
     {
-        $slugs = config('afterburner-voting.council_role_slugs', []);
+        $slugs = CouncilRoleSlugs::resolve();
 
         if ($slugs === []) {
             return false;

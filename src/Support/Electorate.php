@@ -135,7 +135,7 @@ final class Electorate implements Stringable
         }
 
         if ($this->isCouncil()) {
-            return config('afterburner-voting.council_role_slugs', []);
+            return CouncilRoleSlugs::resolve();
         }
 
         if ($this->isMultiRole()) {

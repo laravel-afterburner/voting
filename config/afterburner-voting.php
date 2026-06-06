@@ -8,6 +8,12 @@ return [
 
     'eligibility_resolver' => DefaultUserVoterEligibilityResolver::class,
 
+    /*
+    | When set, council electorate and filters read slugs from this class (e.g.
+    | App\Support\CouncilRoles) instead of the static list below.
+    */
+    'council_role_resolver' => env('AFTERBURNER_COUNCIL_ROLE_RESOLVER', \App\Support\CouncilRoles::class),
+
     'council_role_slugs' => [
         'president',
         'treasurer',
