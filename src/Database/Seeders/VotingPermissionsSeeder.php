@@ -2,7 +2,7 @@
 
 namespace Afterburner\Voting\Database\Seeders;
 
-use Afterburner\Voting\Database\Seeders\Concerns\AssignsPermissionsToTeamOwners;
+use App\Database\Seeders\Concerns\AssignsPermissionsToTeamOwners;
 use Afterburner\Voting\Support\VotingPermissionDefinitions;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;

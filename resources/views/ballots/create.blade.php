@@ -1,4 +1,4 @@
-<x-app-layout :title="\Afterburner\Voting\Support\PageHeader::make('Voting', isset($ballot) ? 'Edit' : 'Create ballot', isset($ballot) ? $ballot->title : null)">
+<x-app-layout :title="\App\Support\PageHeader::make('Voting', isset($ballot) ? 'Edit' : 'Create ballot', isset($ballot) ? $ballot->title : null)">
     <x-slot name="header">
         @if (isset($ballot))
             <x-afterburner-voting::page-header section="Voting" action="Edit" :detail="$ballot->title" />

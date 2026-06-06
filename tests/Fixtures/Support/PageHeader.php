@@ -1,6 +1,6 @@
 <?php
 
-namespace Afterburner\Voting\Support;
+namespace App\Support;
 
 class PageHeader
 {

@@ -1,10 +1,9 @@
 <?php
 
-namespace Afterburner\Voting\Support;
+namespace App\Support;
 
 use App\Models\Team;
 use App\Models\User;
-use App\Support\PermissionCatalog;
 
 final class TeamPermissionGate
 {

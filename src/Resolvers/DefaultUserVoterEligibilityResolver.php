@@ -8,7 +8,7 @@ use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Support\BallotParticipation;
 use Afterburner\Voting\Support\ElectorateFilter;
-use Afterburner\Voting\Support\TeamPermissionGate;
+use App\Support\TeamPermissionGate;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use Afterburner\Voting\Support\VoterUnit;
 use App\Models\User;

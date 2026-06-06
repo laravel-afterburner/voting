@@ -5,7 +5,7 @@ namespace Afterburner\Voting\Policies;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\ProxyVote;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
-use Afterburner\Voting\Support\TeamPermissionGate;
+use App\Support\TeamPermissionGate;
 use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 

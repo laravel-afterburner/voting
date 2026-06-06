@@ -6,7 +6,7 @@ use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Services\BallotResultsExportService;
 use Afterburner\Voting\Services\BallotResultsPdfExporter;
 use Afterburner\Voting\Services\BallotTallyService;
-use Afterburner\Voting\Support\TeamPermissionGate;
+use App\Support\TeamPermissionGate;
 use App\Models\Team;
 use App\Models\User;
 use Illuminate\Http\Request;

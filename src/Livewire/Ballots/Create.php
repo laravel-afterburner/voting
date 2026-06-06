@@ -11,7 +11,7 @@ use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Support\BallotVoteVisibilityGuard;
 use Afterburner\Voting\Support\Electorate;
 use Afterburner\Voting\Support\ElectorateOptions;
-use Afterburner\Voting\Support\TeamDateTime;
+use App\Support\TeamDateTime;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\Team;

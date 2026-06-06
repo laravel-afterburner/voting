@@ -1,4 +1,4 @@
-<x-app-layout :title="\Afterburner\Voting\Support\PageHeader::make('Voting', detail: 'Results: '.$ballot->title)">
+<x-app-layout :title="\App\Support\PageHeader::make('Voting', detail: 'Results: '.$ballot->title)">
     <x-slot name="header">
         <x-afterburner-voting::page-header section="Voting" :detail="'Results: '.$ballot->title" />
     </x-slot>

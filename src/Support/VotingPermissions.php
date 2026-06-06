@@ -4,6 +4,7 @@ namespace Afterburner\Voting\Support;
 
 use App\Models\Team;
 use App\Models\User;
+use App\Support\TeamPermissionGate;
 
 /**
  * Voting module areas (ballots, proxies, results) mapped to permission slugs.

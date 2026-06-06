@@ -2,7 +2,7 @@
 
 namespace Afterburner\Voting\Livewire\Proxies;
 
-use Afterburner\Support\EntityLabel;
+use App\Support\EntityLabel;
 use Afterburner\Voting\Actions\CreateProxy;
 use Afterburner\Voting\Actions\RevokeProxy;
 use Afterburner\Voting\Contracts\ProxyGrantResolver;

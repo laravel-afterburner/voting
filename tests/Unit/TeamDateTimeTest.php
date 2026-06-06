@@ -2,7 +2,7 @@
 
 namespace Afterburner\Voting\Tests\Unit;
 
-use Afterburner\Voting\Support\TeamDateTime;
+use App\Support\TeamDateTime;
 use Afterburner\Voting\Tests\TestCase;
 use Carbon\Carbon;
 

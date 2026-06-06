@@ -10,7 +10,7 @@ use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Services\BallotTallyService;
 use Afterburner\Voting\Support\BallotParticipation;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
-use Afterburner\Voting\Support\TeamPermissionGate;
+use App\Support\TeamPermissionGate;
 use Afterburner\Voting\Support\VotingPermissions;
 use App\Models\Team;
 use App\Models\User;

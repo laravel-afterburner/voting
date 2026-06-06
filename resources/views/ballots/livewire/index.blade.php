@@ -67,14 +67,14 @@
                         </td>
                         <td class="table-cell-lg whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             @if ($ballot->opens_at)
-                                {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
+                                {!! \App\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
                             @else
                                 —
                             @endif
                         </td>
                         <td class="table-cell-lg whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
                             @if ($ballot->closes_at)
-                                {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
+                                {!! \App\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
                             @else
                                 —
                             @endif

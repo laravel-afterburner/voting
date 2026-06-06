@@ -37,7 +37,7 @@
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Opens</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                        {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
+                        {!! \App\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
                     </dd>
                 </div>
             @endif
@@ -45,7 +45,7 @@
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Closes</dt>
                     <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
-                        {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
+                        {!! \App\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
                     </dd>
                 </div>
             @endif
@@ -124,7 +124,7 @@
                 @endforeach
                 @if ($ballot->isOpen() && $ballot->closes_at && ! $allowVoteRevocation)
                     <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        You may change your vote until {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}.
+                        You may change your vote until {!! \App\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}.
                     </p>
                 @endif
                 @if ($allowVoteRevocation && $ballot->isOpen())

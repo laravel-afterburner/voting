@@ -5,6 +5,7 @@ namespace Afterburner\Voting\Support;
 use Afterburner\Voting\Contracts\CustomElectorateResolver;
 use Afterburner\Voting\Models\Ballot;
 use App\Models\User;
+use App\Support\TeamPermissionGate;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;

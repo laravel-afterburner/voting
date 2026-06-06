@@ -3,7 +3,7 @@
 namespace Afterburner\Voting\Tests;
 
 use Afterburner\Documents\Providers\DocumentsServiceProvider;
-use Afterburner\Support\Testing\Concerns\ConfiguresAfterburnerEntity;
+use Tests\Concerns\ConfiguresAfterburnerEntity;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
 use Afterburner\Voting\Enums\ElectorateType;
@@ -27,6 +27,8 @@ abstract class TestCase extends BaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+
+        require_once __DIR__.'/Fixtures/entity_helpers.php';
 
         config([
             'afterburner-voting.enabled' => true,

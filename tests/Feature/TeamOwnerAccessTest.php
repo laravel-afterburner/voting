@@ -2,7 +2,7 @@
 
 namespace Afterburner\Voting\Tests\Feature;
 
-use Afterburner\Voting\Support\TeamPermissionGate;
+use App\Support\TeamPermissionGate;
 use Afterburner\Voting\Tests\TestCase;
 use App\Models\Team;
 use App\Models\User;

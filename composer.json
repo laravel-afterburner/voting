@@ -1,12 +1,11 @@
 {
     "name": "laravel-afterburner/voting",
     "description": "Team-scoped voting and ballots for Afterburner applications",
-    "version": "1.8.6",
+    "version": "1.8.7",
     "type": "library",
     "license": "MIT",
     "require": {
         "php": "^8.2",
-        "laravel-afterburner/support": "^1.0",
         "laravel/framework": "^11.0",
         "laravel-afterburner/jetstream": "^1.0|dev-master",
         "livewire/livewire": "^3.5"
@@ -22,9 +21,18 @@
         "psr-4": {
             "Afterburner\\Voting\\Tests\\": "tests/",
             "App\\Models\\": "tests/Fixtures/Models/",
-            "App\\Support\\": "tests/Fixtures/Support/",
-            "App\\Traits\\": "tests/Fixtures/Traits/"
-        }
+            "App\\Traits\\": "tests/Fixtures/Traits/",
+            "Tests\\Concerns\\": "tests/Concerns/"
+        },
+        "classmap": [
+            "tests/Fixtures/Support/EntityLabel.php",
+            "tests/Fixtures/Support/TeamPermissionGate.php",
+            "tests/Fixtures/Support/PageHeader.php",
+            "tests/Fixtures/Support/TeamDateTime.php",
+            "tests/Fixtures/Support/Concerns/ChecksOptionalSubscriptionEntitlement.php",
+            "tests/Fixtures/Database/Seeders/Concerns/AssignsPermissionsToTeamOwners.php",
+            "tests/Fixtures/Support/Audit/AuditLogger.php"
+        ]
     },
     "scripts": {
         "test": "phpunit",
