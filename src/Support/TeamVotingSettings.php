@@ -21,6 +21,24 @@ class TeamVotingSettings
         return $config !== null ? (float) $config : null;
     }
 
+    public static function defaultVoteWeightPerLotForTeam(Team|int $team): ?float
+    {
+        $setting = static::findForTeam($team);
+
+        if ($setting && $setting->default_vote_weight_per_lot !== null) {
+            return (float) $setting->default_vote_weight_per_lot;
+        }
+
+        $config = config('afterburner-voting.default_vote_weight_per_lot');
+
+        return $config !== null ? (float) $config : null;
+    }
+
+    public static function usesPerLotVoteWeights(Team|int $team): bool
+    {
+        return static::defaultVoteWeightPerLotForTeam($team) === null;
+    }
+
     public static function defaultVoteVisibilityForTeam(Team|int $team): VoteVisibility
     {
         $setting = static::findForTeam($team);
@@ -65,6 +83,7 @@ class TeamVotingSettings
             ['team_id' => $teamId],
             [
                 'default_quorum_percent' => config('afterburner-voting.default_quorum_percent'),
+                'default_vote_weight_per_lot' => config('afterburner-voting.default_vote_weight_per_lot'),
                 'default_vote_visibility' => config('afterburner-voting.default_vote_visibility', 'secret'),
                 'allow_proxy_votes' => (bool) config('afterburner-voting.allow_proxy_votes', true),
                 'lock_designation_during_open_ballots' => false,

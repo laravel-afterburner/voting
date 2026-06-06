@@ -7,6 +7,7 @@ use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\VoteVisibility;
 use Afterburner\Voting\Models\Ballot;
+use Afterburner\Voting\Support\TeamVotingSettings;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Pagination\LengthAwarePaginator as Paginator;
 
@@ -16,8 +17,12 @@ class BallotTallyService
         protected VoterEligibilityResolver $resolver,
     ) {}
 
-    public function usesWeightedTally(): bool
+    public function usesWeightedTally(Ballot $ballot): bool
     {
+        if (TeamVotingSettings::defaultVoteWeightPerLotForTeam($ballot->team) !== null) {
+            return true;
+        }
+
         return $this->resolver instanceof ProvidesWeightedVotes;
     }
 
@@ -30,8 +35,9 @@ class BallotTallyService
      */
     public function tally(Ballot $ballot): array
     {
-        $ballot->loadMissing('options');
-        $weighted = $this->usesWeightedTally();
+        $ballot->loadMissing(['options', 'team']);
+        $weighted = $this->usesWeightedTally($ballot);
+        $teamDefaultWeight = TeamVotingSettings::defaultVoteWeightPerLotForTeam($ballot->team);
 
         $responses = $ballot->responses()
             ->get(['ballot_option_id', 'voter_unit_type', 'voter_unit_id']);
@@ -40,9 +46,13 @@ class BallotTallyService
         $totalVotes = 0.0;
 
         foreach ($responses as $response) {
-            $weight = $weighted
-                ? $this->resolver->voterUnitWeight($ballot, $response->voter_unit_type, $response->voter_unit_id)
-                : 1.0;
+            $weight = $this->responseWeight(
+                $ballot,
+                $response->voter_unit_type,
+                $response->voter_unit_id,
+                $weighted,
+                $teamDefaultWeight,
+            );
 
             $counts[$response->ballot_option_id] = ($counts[$response->ballot_option_id] ?? 0) + $weight;
             $totalVotes += $weight;
@@ -152,14 +162,34 @@ class BallotTallyService
             'via_proxy' => $response->proxy_vote_id !== null,
         ];
 
-        if ($this->usesWeightedTally()) {
-            $row['weight'] = $this->resolver->voterUnitWeight(
+        if ($this->usesWeightedTally($ballot)) {
+            $row['weight'] = $this->responseWeight(
                 $ballot,
                 $response->voter_unit_type,
                 $response->voter_unit_id,
+                true,
+                TeamVotingSettings::defaultVoteWeightPerLotForTeam($ballot->team),
             );
         }
 
         return $row;
+    }
+
+    protected function responseWeight(
+        Ballot $ballot,
+        string $voterUnitType,
+        int $voterUnitId,
+        bool $weighted,
+        ?float $teamDefaultWeight,
+    ): float {
+        if ($teamDefaultWeight !== null) {
+            return $teamDefaultWeight;
+        }
+
+        if ($weighted && $this->resolver instanceof ProvidesWeightedVotes) {
+            return $this->resolver->voterUnitWeight($ballot, $voterUnitType, $voterUnitId);
+        }
+
+        return 1.0;
     }
 }

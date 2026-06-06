@@ -21,6 +21,12 @@ return [
 
     'default_quorum_percent' => null,
 
+    /*
+    | When set, every lot uses this vote weight and per-lot weight fields are hidden
+    | in the host application. Leave null to allow individual vote weights per lot.
+    */
+    'default_vote_weight_per_lot' => null,
+
     'allow_proxy_votes' => true,
 
     /*

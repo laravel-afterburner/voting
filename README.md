@@ -141,7 +141,11 @@ class PropertyVoterEligibilityResolver implements ProvidesWeightedVotes, VoterEl
 }
 ```
 
-Tally and CSV/PDF exports use weighted counts when the bound resolver implements this contract.
+Tally and CSV/PDF exports use weighted counts when the bound resolver implements this contract, or when the team default vote weight per lot is set in voting settings.
+
+### Multi-lot owner voting
+
+When a user is eligible to vote for two or more owned lots (not proxies) on the same ballot, the ballot page defaults to a single form that records the same choice for all listed lots. A **Vote separately for each lot** option switches to per-lot forms. Proxy lots always use individual forms.
 
 ## Phase 3 features
 
@@ -161,6 +165,7 @@ Team admins can configure defaults in **System Settings → Voting** (`/teams/{t
 | Setting | Purpose |
 |---------|---------|
 | Default quorum (%) | Applied to new ballots; optional |
+| Default vote weight per lot | Set to `1` when every lot counts equally; leave empty to set weight per lot in the host property register |
 | Default vote visibility | Confidential, visible after close, or visible in realtime |
 | Allow proxy votes | Team-level toggle (global kill switch in config still applies) |
 | Lock designation during open ballots | Stored preference for host apps; not enforced by this package |

@@ -36,6 +36,38 @@
 
                 <div>
                     <div class="flex items-center gap-1.5">
+                        <x-label for="defaultVoteWeightPerLot" value="Default vote weight per lot" />
+                        <x-afterburner-voting::info-hint
+                            label="Default vote weight per lot"
+                            :scrollable="true"
+                        >
+                            <p>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Equal lots:</span>
+                                Set this to <span class="font-medium">1</span> when every lot has the same voting power. All lots will use this weight and per-lot weight fields stay hidden in your property register.
+                            </p>
+                            <p>
+                                <span class="font-medium text-gray-700 dark:text-gray-300">Variable entitlement:</span>
+                                Leave this empty to set vote weight individually on each lot. Only users with permission to manage lot vote weights can edit those fields.
+                            </p>
+                        </x-afterburner-voting::info-hint>
+                    </div>
+                    <x-input
+                        id="defaultVoteWeightPerLot"
+                        type="number"
+                        min="0.0001"
+                        step="0.0001"
+                        class="mt-1 block w-full max-w-xs"
+                        wire:model="defaultVoteWeightPerLot"
+                        placeholder="Set per lot in property register"
+                    />
+                    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                        Leave empty to configure vote weight on each lot. Set to 1 when every lot counts equally.
+                    </p>
+                    <x-input-error for="defaultVoteWeightPerLot" class="mt-2" />
+                </div>
+
+                <div>
+                    <div class="flex items-center gap-1.5">
                         <x-label for="defaultVoteVisibility" value="Default vote visibility" />
                         <x-afterburner-voting::info-hint
                             label="Default vote visibility"

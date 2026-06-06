@@ -10,6 +10,8 @@ use Afterburner\Voting\Concerns\FlashesNativeBanner;
 use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotResponse;
+use Afterburner\Voting\Support\VoterUnit;
+use Afterburner\Voting\Support\VoterUnitPartitioner;
 use App\Models\Team;
 use App\Models\User;
 use App\Traits\InteractsWithBanner;
@@ -27,6 +29,8 @@ class Show extends Component
     public int $ballotId;
 
     public bool $confirmingBallotDeletion = false;
+
+    public bool $votePerLot = false;
 
     public function mount(Team $team, Ballot $ballot): void
     {
@@ -126,6 +130,16 @@ class Show extends Component
         // Trigger a re-render after a nested vote form submits.
     }
 
+    public function showVotePerLot(): void
+    {
+        $this->votePerLot = true;
+    }
+
+    public function showBulkVote(): void
+    {
+        $this->votePerLot = false;
+    }
+
     protected function ballot(): Ballot
     {
         return Ballot::query()
@@ -142,6 +156,12 @@ class Show extends Component
         $resolver = app(VoterEligibilityResolver::class);
 
         $eligibleUnits = $resolver->eligibleVoterUnits($user, $ballot);
+        $partition = app(VoterUnitPartitioner::class)->partition($user, $ballot, $eligibleUnits);
+        $ownedLotUnits = $partition['owned_lot_units'];
+        $supportsBulkLotVoting = app(VoterUnitPartitioner::class)->supportsBulkLotVoting($ownedLotUnits);
+        $bulkLotUnits = $supportsBulkLotVoting
+            ? $ownedLotUnits->map(fn (VoterUnit $unit) => ['type' => $unit->type, 'id' => $unit->id])->values()->all()
+            : [];
         $responses = BallotResponse::query()
             ->where('ballot_id', $ballot->id)
             ->where(function ($query) use ($user) {
@@ -158,6 +178,11 @@ class Show extends Component
             'team' => $team,
             'ballot' => $ballot,
             'eligibleUnits' => $eligibleUnits,
+            'ownedLotUnits' => $ownedLotUnits,
+            'proxyUnits' => $partition['proxy_units'],
+            'individualUnits' => $partition['individual_units'],
+            'supportsBulkLotVoting' => $supportsBulkLotVoting,
+            'bulkLotUnits' => $bulkLotUnits,
             'responses' => $responses,
             'canVote' => $user->can('vote', $ballot),
             'canPublish' => $user->can('publish', $ballot),

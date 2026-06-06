@@ -1,7 +1,7 @@
 {
     "name": "laravel-afterburner/voting",
     "description": "Team-scoped voting and ballots for Afterburner applications",
-    "version": "1.8.2",
+    "version": "1.8.3",
     "type": "library",
     "license": "MIT",
     "require": {

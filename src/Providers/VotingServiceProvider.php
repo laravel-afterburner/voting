@@ -2,6 +2,8 @@
 
 namespace Afterburner\Voting\Providers;
 
+use Afterburner\Playbook\Support\Playbook;
+use Afterburner\Subscriptions\Support\SubscriptionPackageFeatures;
 use Afterburner\Voting\Console\Commands\InstallCommand;
 use Afterburner\Voting\Console\Commands\ProcessScheduledBallotsCommand;
 use Afterburner\Voting\Contracts\CustomElectorateResolver;
@@ -11,6 +13,7 @@ use Afterburner\Voting\Database\Seeders\VotingPermissionsSeeder;
 use Afterburner\Voting\Events\BallotPublished;
 use Afterburner\Voting\Listeners\SendBallotPublishedVoterNotifications;
 use Afterburner\Voting\Livewire\Ballots\BallotDocuments;
+use Afterburner\Voting\Livewire\Ballots\BulkVoteForm;
 use Afterburner\Voting\Livewire\Ballots\Create;
 use Afterburner\Voting\Livewire\Ballots\Index;
 use Afterburner\Voting\Livewire\Ballots\Results;
@@ -24,7 +27,6 @@ use Afterburner\Voting\Policies\BallotPolicy;
 use Afterburner\Voting\Policies\ProxyVotePolicy;
 use Afterburner\Voting\Support\DocumentsIntegration;
 use Afterburner\Voting\Support\SubscriptionEntitlementGate;
-use Afterburner\Playbook\Support\Playbook;
 use Afterburner\Voting\Support\TeamVotingSettings;
 use Afterburner\Voting\Support\VotingPermissions;
 use App\Models\Team;
@@ -173,6 +175,7 @@ class VotingServiceProvider extends ServiceProvider
         Livewire::component('voting.index', Index::class);
         Livewire::component('voting.show', Show::class);
         Livewire::component('voting.vote-form', VoteForm::class);
+        Livewire::component('voting.bulk-vote-form', BulkVoteForm::class);
         Livewire::component('voting.create', Create::class);
         Livewire::component('voting.results', Results::class);
 
@@ -412,11 +415,11 @@ class VotingServiceProvider extends ServiceProvider
 
     protected function registerSubscriptionPackageFeatures(): void
     {
-        if (! class_exists(\Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::class)) {
+        if (! class_exists(SubscriptionPackageFeatures::class)) {
             return;
         }
 
-        \Afterburner\Subscriptions\Support\SubscriptionPackageFeatures::register('voting', 'Voting', [
+        SubscriptionPackageFeatures::register('voting', 'Voting', [
             'Electronic ballots',
             'Proxy voting',
             'Results & reporting',

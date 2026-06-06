@@ -29,7 +29,7 @@ class BallotResultsExportService
             'tally' => $this->tallyService->tally($ballot),
             'quorum' => $this->quorumService->calculate($ballot),
             'response_details' => $this->tallyService->responseDetails($ballot),
-            'weighted' => $this->tallyService->usesWeightedTally(),
+            'weighted' => $this->tallyService->usesWeightedTally($ballot),
         ];
     }
 }

@@ -16,6 +16,8 @@ class VotingSettings extends Component
 
     public ?string $defaultQuorumPercent = null;
 
+    public ?string $defaultVoteWeightPerLot = null;
+
     public string $defaultVoteVisibility = 'secret';
 
     public bool $allowProxyVotes = true;
@@ -33,6 +35,9 @@ class VotingSettings extends Component
         $this->defaultQuorumPercent = $settings->default_quorum_percent !== null
             ? (string) $settings->default_quorum_percent
             : null;
+        $this->defaultVoteWeightPerLot = $settings->default_vote_weight_per_lot !== null
+            ? (string) $settings->default_vote_weight_per_lot
+            : null;
         $this->defaultVoteVisibility = $settings->default_vote_visibility->value;
         $this->allowProxyVotes = $settings->allow_proxy_votes;
         $this->lockDesignationDuringOpenBallots = $settings->lock_designation_during_open_ballots;
@@ -44,6 +49,7 @@ class VotingSettings extends Component
 
         $validated = $this->validate([
             'defaultQuorumPercent' => 'nullable|numeric|min:0|max:100',
+            'defaultVoteWeightPerLot' => 'nullable|numeric|gt:0',
             'defaultVoteVisibility' => 'required|in:secret,visible_after_close,visible_realtime',
             'allowProxyVotes' => 'boolean',
             'lockDesignationDuringOpenBallots' => 'boolean',
@@ -56,6 +62,9 @@ class VotingSettings extends Component
             'default_quorum_percent' => filled($validated['defaultQuorumPercent'])
                 ? (float) $validated['defaultQuorumPercent']
                 : null,
+            'default_vote_weight_per_lot' => filled($validated['defaultVoteWeightPerLot'])
+                ? (float) $validated['defaultVoteWeightPerLot']
+                : null,
             'default_vote_visibility' => VoteVisibility::from($validated['defaultVoteVisibility']),
             'allow_proxy_votes' => $validated['allowProxyVotes'],
             'lock_designation_during_open_ballots' => $validated['lockDesignationDuringOpenBallots'],
@@ -67,6 +76,7 @@ class VotingSettings extends Component
 
         VotingAuditLogger::settingsUpdated($this->team, Auth::user(), [
             'default_quorum_percent' => $validated['defaultQuorumPercent'] ?? null,
+            'default_vote_weight_per_lot' => $validated['defaultVoteWeightPerLot'] ?? null,
             'default_vote_visibility' => $validated['defaultVoteVisibility'],
             'allow_proxy_votes' => $validated['allowProxyVotes'],
             'lock_designation_during_open_ballots' => $validated['lockDesignationDuringOpenBallots'],

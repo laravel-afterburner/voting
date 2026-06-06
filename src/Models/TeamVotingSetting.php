@@ -12,6 +12,7 @@ class TeamVotingSetting extends Model
     protected $fillable = [
         'team_id',
         'default_quorum_percent',
+        'default_vote_weight_per_lot',
         'default_vote_visibility',
         'allow_proxy_votes',
         'lock_designation_during_open_ballots',
@@ -21,6 +22,7 @@ class TeamVotingSetting extends Model
     {
         return [
             'default_quorum_percent' => 'float',
+            'default_vote_weight_per_lot' => 'float',
             'default_vote_visibility' => VoteVisibility::class,
             'allow_proxy_votes' => 'boolean',
             'lock_designation_during_open_ballots' => 'boolean',

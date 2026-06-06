@@ -36,13 +36,17 @@
             @if ($ballot->opens_at)
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Opens</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                        {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->opens_at) !!}
+                    </dd>
                 </div>
             @endif
             @if ($ballot->closes_at)
                 <div>
                     <dt class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Closes</dt>
-                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">{!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}</dd>
+                    <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
+                        {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}
+                    </dd>
                 </div>
             @endif
         </dl>
@@ -56,7 +60,7 @@
                     ])>
                         <div class="min-w-0">
                             @if ($loop->first)
-                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Your vote</p>
+                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">You voted:</p>
                             @endif
                             <p @class([
                                 'flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-900 dark:text-gray-100',
@@ -68,7 +72,6 @@
                                     </svg>
                                     {{ $response->option->label }}
                                 </span>
-                                <span class="text-gray-500 dark:text-gray-400">cast {{ $response->cast_at->diffForHumans() }}</span>
                             </p>
                         </div>
                         @if ($allowVoteRevocation && $ballot->isOpen() && auth()->user()->can('revokeVote', [$ballot, $response->voter_unit_type, $response->voter_unit_id]))
@@ -84,7 +87,7 @@
                 @endforeach
                 @if ($ballot->isOpen() && $ballot->closes_at && ! $allowVoteRevocation)
                     <p class="mt-3 text-xs text-gray-500 dark:text-gray-400">
-                        You may change your vote until {{ \Afterburner\Voting\Support\TeamDateTime::format($team, $ballot->closes_at) }}.
+                        You may change your vote until {!! \Afterburner\Voting\Support\TeamDateTime::formatDisplay($team, $ballot->closes_at) !!}.
                     </p>
                 @endif
                 @if ($allowVoteRevocation && $ballot->isOpen())
@@ -130,7 +133,44 @@
 
     @if ($canVote)
         <div class="mt-6 space-y-6">
-            @foreach ($eligibleUnits as $unit)
+            @if ($supportsBulkLotVoting && ! $votePerLot)
+                @livewire('voting.bulk-vote-form', [
+                    'ballotId' => $ballot->id,
+                    'units' => $bulkLotUnits,
+                ], key('bulk-vote-form-'.$ballot->id.'-'.md5(json_encode($bulkLotUnits))))
+
+                <div class="flex justify-end">
+                    <x-secondary-button type="button" wire:click="showVotePerLot" no-spinner>
+                        Vote separately for each lot
+                    </x-secondary-button>
+                </div>
+            @endif
+
+            @if ($supportsBulkLotVoting && $votePerLot)
+                <div class="flex justify-end">
+                    <x-secondary-button type="button" wire:click="showBulkVote" no-spinner>
+                        Vote for all lots at once
+                    </x-secondary-button>
+                </div>
+            @endif
+
+            @foreach ($supportsBulkLotVoting && $votePerLot ? $ownedLotUnits : ($supportsBulkLotVoting ? collect() : $ownedLotUnits) as $unit)
+                @livewire('voting.vote-form', [
+                    'ballotId' => $ballot->id,
+                    'voterUnitType' => $unit->type,
+                    'voterUnitId' => $unit->id,
+                ], key('vote-form-'.$unit->key()))
+            @endforeach
+
+            @foreach ($proxyUnits as $unit)
+                @livewire('voting.vote-form', [
+                    'ballotId' => $ballot->id,
+                    'voterUnitType' => $unit->type,
+                    'voterUnitId' => $unit->id,
+                ], key('vote-form-'.$unit->key()))
+            @endforeach
+
+            @foreach ($individualUnits as $unit)
                 @livewire('voting.vote-form', [
                     'ballotId' => $ballot->id,
                     'voterUnitType' => $unit->type,
