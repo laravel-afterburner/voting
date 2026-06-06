@@ -5,16 +5,19 @@ namespace Afterburner\Voting\Livewire\Ballots;
 use Afterburner\Voting\Actions\CloseBallot;
 use Afterburner\Voting\Actions\DeleteBallot;
 use Afterburner\Voting\Actions\PublishBallot;
+use Afterburner\Voting\Actions\ReopenBallot;
 use Afterburner\Voting\Actions\RevokeVote;
 use Afterburner\Voting\Concerns\FlashesNativeBanner;
 use Afterburner\Voting\Contracts\VoterEligibilityResolver;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Models\BallotResponse;
-use Afterburner\Voting\Support\VoterUnit;
+use Afterburner\Voting\Support\DocumentsIntegration;
+use Afterburner\Voting\Support\UserBallotResponseSummary;
 use Afterburner\Voting\Support\VoterUnitPartitioner;
 use App\Models\Team;
 use App\Models\User;
 use App\Traits\InteractsWithBanner;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Livewire\Attributes\On;
 use Livewire\Component;
@@ -32,6 +35,10 @@ class Show extends Component
 
     public bool $votePerLot = false;
 
+    public int $voteSummaryVersion = 0;
+
+    public bool $showVoteForm = false;
+
     public function mount(Team $team, Ballot $ballot): void
     {
         if ($ballot->team_id !== $team->id) {
@@ -46,6 +53,10 @@ class Show extends Component
 
         $this->teamId = $team->id;
         $this->ballotId = $ballot->id;
+
+        $user = Auth::user();
+        $this->syncVoteFormModeFromBallot($ballot, $user);
+        $this->syncVoteFormVisibility($ballot, $user);
     }
 
     public function publishBallot(): void
@@ -62,27 +73,45 @@ class Show extends Component
 
     public function revokeVote(int $responseId): void
     {
+        $this->revokeVotes([$responseId]);
+    }
+
+    /**
+     * @param  array<int, int>  $responseIds
+     */
+    public function revokeVotes(array $responseIds): void
+    {
         $ballot = $this->ballot();
 
-        $response = BallotResponse::query()
-            ->where('ballot_id', $ballot->id)
-            ->where('id', $responseId)
-            ->firstOrFail();
+        foreach ($responseIds as $responseId) {
+            $response = BallotResponse::query()
+                ->where('ballot_id', $ballot->id)
+                ->where('id', $responseId)
+                ->firstOrFail();
 
-        try {
-            app(RevokeVote::class)->execute(
-                $ballot,
-                Auth::user(),
-                $response->voter_unit_type,
-                $response->voter_unit_id,
-                request()->ip(),
-                request()->userAgent(),
-            );
-            $this->banner(__('Your vote has been revoked.'));
-            $this->dispatch('refresh-notifications');
-        } catch (\Throwable $exception) {
-            $this->dangerBanner($exception->getMessage());
+            try {
+                app(RevokeVote::class)->execute(
+                    $ballot,
+                    Auth::user(),
+                    $response->voter_unit_type,
+                    $response->voter_unit_id,
+                    request()->ip(),
+                    request()->userAgent(),
+                );
+            } catch (\Throwable $exception) {
+                $this->dangerBanner($exception->getMessage());
+
+                return;
+            }
         }
+
+        $message = count($responseIds) > 1
+            ? __('Your votes have been revoked.')
+            : __('Your vote has been revoked.');
+
+        $this->voteSummaryVersion++;
+        $this->banner($message);
+        $this->dispatch('refresh-notifications');
     }
 
     public function closeBallot(): void
@@ -92,6 +121,18 @@ class Show extends Component
         try {
             app(CloseBallot::class)->execute($ballot, Auth::user());
             $this->banner(__('Ballot closed successfully.'));
+        } catch (\Throwable $exception) {
+            $this->dangerBanner($exception->getMessage());
+        }
+    }
+
+    public function reopenBallot(): void
+    {
+        $ballot = $this->ballot();
+
+        try {
+            app(ReopenBallot::class)->execute($ballot, Auth::user());
+            $this->banner(__('Ballot reopened successfully.'));
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
         }
@@ -127,17 +168,19 @@ class Show extends Component
     #[On('vote-cast')]
     public function refreshAfterVote(): void
     {
-        // Trigger a re-render after a nested vote form submits.
+        $this->voteSummaryVersion++;
+        $this->syncVoteFormModeFromBallot($this->ballot(), Auth::user());
+        $this->showVoteForm = false;
     }
 
-    public function showVotePerLot(): void
-    {
-        $this->votePerLot = true;
-    }
+    #[On('ballot-documents-updated')]
+    public function refreshBallotDocuments(): void {}
 
-    public function showBulkVote(): void
+    public function showUpdateVoteForm(): void
     {
-        $this->votePerLot = false;
+        abort_unless(Auth::user()->can('vote', $this->ballot()), 403);
+
+        $this->showVoteForm = true;
     }
 
     protected function ballot(): Ballot
@@ -148,21 +191,37 @@ class Show extends Component
             ->findOrFail($this->ballotId);
     }
 
-    public function render()
+    protected function syncVoteFormModeFromBallot(Ballot $ballot, User $user): void
     {
-        $ballot = $this->ballot();
-        $team = Team::query()->findOrFail($this->teamId);
-        $user = Auth::user();
-        $resolver = app(VoterEligibilityResolver::class);
+        $eligibleUnits = app(VoterEligibilityResolver::class)->eligibleVoterUnits($user, $ballot);
+        $ownedLotUnits = app(VoterUnitPartitioner::class)
+            ->partition($user, $ballot, $eligibleUnits)['owned_lot_units'];
 
-        $eligibleUnits = $resolver->eligibleVoterUnits($user, $ballot);
-        $partition = app(VoterUnitPartitioner::class)->partition($user, $ballot, $eligibleUnits);
-        $ownedLotUnits = $partition['owned_lot_units'];
-        $supportsBulkLotVoting = app(VoterUnitPartitioner::class)->supportsBulkLotVoting($ownedLotUnits);
-        $bulkLotUnits = $supportsBulkLotVoting
-            ? $ownedLotUnits->map(fn (VoterUnit $unit) => ['type' => $unit->type, 'id' => $unit->id])->values()->all()
-            : [];
-        $responses = BallotResponse::query()
+        $this->syncVoteFormMode($ownedLotUnits, $this->userResponses($ballot, $user));
+    }
+
+    /**
+     * @param  Collection<int, VoterUnit>  $ownedLotUnits
+     * @param  Collection<int, BallotResponse>  $responses
+     */
+    protected function syncVoteFormMode($ownedLotUnits, $responses): void
+    {
+        $this->votePerLot = app(VoterUnitPartitioner::class)
+            ->shouldUsePerLotVoteForm($ownedLotUnits, $responses);
+    }
+
+    protected function syncVoteFormVisibility(Ballot $ballot, User $user): void
+    {
+        $this->showVoteForm = $user->can('vote', $ballot)
+            && $this->userResponses($ballot, $user)->isEmpty();
+    }
+
+    /**
+     * @return Collection<int, BallotResponse>
+     */
+    protected function userResponses(Ballot $ballot, User $user)
+    {
+        return BallotResponse::query()
             ->where('ballot_id', $ballot->id)
             ->where(function ($query) use ($user) {
                 $query->where('cast_by_user_id', $user->id)
@@ -172,21 +231,44 @@ class Show extends Component
                     });
             })
             ->with('option')
+            ->orderBy('cast_at')
             ->get();
+    }
+
+    public function render()
+    {
+        $ballot = $this->ballot();
+        $team = Team::query()->findOrFail($this->teamId);
+        $user = Auth::user();
+        $resolver = app(VoterEligibilityResolver::class);
+
+        $eligibleUnits = $resolver->eligibleVoterUnits($user, $ballot);
+        $ownedLotUnits = app(VoterUnitPartitioner::class)
+            ->partition($user, $ballot, $eligibleUnits)['owned_lot_units'];
+        $responses = $this->userResponses($ballot, $user);
+
+        $voteSummaries = app(UserBallotResponseSummary::class)->summarize($ballot, $responses);
+
+        $showSupportingDocuments = false;
+
+        if (DocumentsIntegration::isEnabled()) {
+            $ballot->loadCount('linkedDocuments');
+            $showSupportingDocuments = $ballot->isOpen() || $ballot->linked_documents_count > 0;
+        }
+
+        $ballot->loadCount('responses');
 
         return view('afterburner-voting::ballots.livewire.show', [
             'team' => $team,
             'ballot' => $ballot,
-            'eligibleUnits' => $eligibleUnits,
-            'ownedLotUnits' => $ownedLotUnits,
-            'proxyUnits' => $partition['proxy_units'],
-            'individualUnits' => $partition['individual_units'],
-            'supportsBulkLotVoting' => $supportsBulkLotVoting,
-            'bulkLotUnits' => $bulkLotUnits,
             'responses' => $responses,
+            'voteSummaries' => $voteSummaries,
+            'showSupportingDocuments' => $showSupportingDocuments,
+            'hasRecordedVotes' => $ballot->responses_count > 0,
             'canVote' => $user->can('vote', $ballot),
             'canPublish' => $user->can('publish', $ballot),
             'canClose' => $user->can('close', $ballot),
+            'canReopen' => $user->can('reopen', $ballot),
             'canViewResults' => $user->can('viewResults', $ballot),
             'canUpdate' => $user->can('update', $ballot),
             'canDelete' => $user->can('delete', $ballot),

@@ -2,7 +2,6 @@
 
 namespace Afterburner\Voting\Actions;
 
-use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\User;
@@ -14,11 +13,9 @@ class DeleteBallot
     {
         Gate::forUser($user)->authorize('delete', $ballot);
 
-        if ($ballot->responses()->exists()) {
-            throw new VotingException('Ballots with recorded votes cannot be deleted.');
-        }
+        $responsesCount = $ballot->responses()->count();
 
-        VotingAuditLogger::ballotDeleted($ballot, $user);
+        VotingAuditLogger::ballotDeleted($ballot, $user, $responsesCount);
 
         $ballot->delete();
     }

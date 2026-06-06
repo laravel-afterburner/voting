@@ -105,10 +105,12 @@ class VoteForm extends Component
             );
 
             $this->banner($hadVote ? __('Your vote has been updated.') : __('Your vote has been recorded.'));
+            $this->dispatch('vote-cast');
             $this->dispatch('vote-cast')->to(Show::class);
             $this->dispatch('refresh-notifications');
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
+            $this->dispatch('vote-cast');
             $this->dispatch('vote-cast')->to(Show::class);
         }
     }

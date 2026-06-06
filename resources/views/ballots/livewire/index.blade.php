@@ -49,7 +49,7 @@
                                 {{ $ballot->title }}
                             </a>
                             @if ($ballot->description)
-                                <p class="mt-1 max-w-md truncate text-xs text-gray-500 dark:text-gray-400">
+                                <p class="mt-1 max-w-md text-clip line-clamp-3 text-xs text-gray-500 dark:text-gray-400">
                                     {{ $ballot->description }}
                                 </p>
                             @endif

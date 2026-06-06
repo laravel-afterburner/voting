@@ -84,10 +84,12 @@ class BulkVoteForm extends Component
             );
 
             $this->banner($hadVotes ? __('Your votes have been updated.') : __('Your votes have been recorded.'));
+            $this->dispatch('vote-cast');
             $this->dispatch('vote-cast')->to(Show::class);
             $this->dispatch('refresh-notifications');
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
+            $this->dispatch('vote-cast');
             $this->dispatch('vote-cast')->to(Show::class);
         }
     }

@@ -22,6 +22,8 @@ class BallotDocuments extends Component
 
     public bool $embedded = false;
 
+    public bool $inPanel = false;
+
     public bool $showAttachModal = false;
 
     public bool $showPreviewModal = false;
@@ -30,7 +32,7 @@ class BallotDocuments extends Component
 
     public string $documentSearch = '';
 
-    public function mount(int $teamId, int $ballotId, bool $embedded = false): void
+    public function mount(int $teamId, int $ballotId, bool $embedded = false, bool $inPanel = false): void
     {
         abort_unless(DocumentsIntegration::isEnabled(), 404);
 
@@ -45,6 +47,7 @@ class BallotDocuments extends Component
         $this->teamId = $teamId;
         $this->ballotId = $ballotId;
         $this->embedded = $embedded;
+        $this->inPanel = $inPanel;
     }
 
     public function openAttachModal(): void
@@ -74,6 +77,7 @@ class BallotDocuments extends Component
             app(AttachDocumentToBallot::class)->execute($ballot, $document, Auth::user());
             $this->banner(__('Document attached to ballot.'));
             $this->closeAttachModal();
+            $this->dispatch('ballot-documents-updated');
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
         }
@@ -95,6 +99,8 @@ class BallotDocuments extends Component
             if ($this->previewDocumentId === $documentId) {
                 $this->closePreview();
             }
+
+            $this->dispatch('ballot-documents-updated');
         } catch (\Throwable $exception) {
             $this->dangerBanner($exception->getMessage());
         }

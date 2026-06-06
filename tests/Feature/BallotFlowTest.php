@@ -14,6 +14,7 @@ use Afterburner\Voting\Services\BallotTallyService;
 use Afterburner\Voting\Tests\TestCase;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Event;
 
 class BallotFlowTest extends TestCase
 {
@@ -137,5 +138,59 @@ class BallotFlowTest extends TestCase
         $this->expectExceptionMessage('Close date must be after the open date');
 
         app(PublishBallot::class)->execute($ballot, $creator);
+    }
+
+    public function test_closed_ballot_can_be_reopened(): void
+    {
+        [$creator, $team] = $this->createTeamWithUser(['vote_resolutions', 'create_resolutions']);
+        $voter = $this->createAdditionalUser($team, ['vote_resolutions'], 'voter@example.com');
+
+        $ballot = $this->createOpenBallot($team, $creator);
+
+        app(\Afterburner\Voting\Actions\CastVote::class)->execute(
+            $ballot,
+            $voter,
+            $ballot->options->firstWhere('label', 'Yes'),
+            User::class,
+            $voter->id,
+        );
+
+        $ballot = app(CloseBallot::class)->execute($ballot, $creator);
+        $this->assertSame(BallotStatus::Closed, $ballot->status);
+
+        Event::fake([\Afterburner\Voting\Events\BallotReopened::class]);
+
+        $ballot = app(\Afterburner\Voting\Actions\ReopenBallot::class)->execute($ballot, $creator);
+
+        $this->assertSame(BallotStatus::Open, $ballot->status);
+        $this->assertNull($ballot->closed_at);
+        $this->assertTrue($ballot->isOpen());
+
+        Event::assertDispatched(\Afterburner\Voting\Events\BallotReopened::class, function ($event) use ($ballot, $creator) {
+            return $event->ballot->is($ballot)
+                && $event->reopenedByUserId === $creator->id;
+        });
+    }
+
+    public function test_closed_ballot_with_votes_can_be_deleted(): void
+    {
+        [$creator, $team] = $this->createTeamWithUser(['vote_resolutions', 'create_resolutions']);
+        $voter = $this->createAdditionalUser($team, ['vote_resolutions'], 'voter@example.com');
+
+        $ballot = $this->createOpenBallot($team, $creator);
+
+        app(\Afterburner\Voting\Actions\CastVote::class)->execute(
+            $ballot,
+            $voter,
+            $ballot->options->firstWhere('label', 'Yes'),
+            User::class,
+            $voter->id,
+        );
+
+        $ballot = app(CloseBallot::class)->execute($ballot, $creator);
+
+        app(\Afterburner\Voting\Actions\DeleteBallot::class)->execute($ballot, $creator);
+
+        $this->assertSoftDeleted('ballots', ['id' => $ballot->id]);
     }
 }

@@ -62,7 +62,7 @@ class VotingPermissionDefinitions
             [
                 'name' => 'Close Ballots',
                 'slug' => 'close_ballots',
-                'description' => 'Close ballots for voting',
+                'description' => 'Close open ballots and reopen closed ballots',
             ],
             [
                 'name' => 'Cancel Ballots',
@@ -72,7 +72,7 @@ class VotingPermissionDefinitions
             [
                 'name' => 'Delete Ballots',
                 'slug' => 'delete_ballots',
-                'description' => 'Delete draft ballots',
+                'description' => 'Delete ballots, including those with recorded votes',
             ],
             [
                 'name' => 'View Ballot Results',

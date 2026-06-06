@@ -7,6 +7,7 @@ use Afterburner\Documents\Models\Document;
 use Afterburner\Voting\Exceptions\VotingException;
 use Afterburner\Voting\Models\Ballot;
 use Afterburner\Voting\Support\DocumentsIntegration;
+use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 
@@ -25,5 +26,7 @@ class DetachDocumentFromBallot
         }
 
         app(UnlinkDocument::class)->execute($document, $ballot, $user);
+
+        VotingAuditLogger::ballotDocumentDetached($ballot, $document, $user);
     }
 }

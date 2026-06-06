@@ -3,6 +3,7 @@
 namespace Afterburner\Voting\Support;
 
 use Afterburner\Voting\Models\Ballot;
+use Afterburner\Voting\Models\BallotResponse;
 use Afterburner\Voting\Models\ProxyVote;
 use App\Models\User;
 use Illuminate\Support\Collection;
@@ -49,6 +50,36 @@ class VoterUnitPartitioner
     public function supportsBulkLotVoting(Collection $ownedLotUnits): bool
     {
         return $ownedLotUnits->count() >= 2;
+    }
+
+    /**
+     * Whether the per-lot vote form should be shown instead of the bulk form.
+     * True when owned lots with responses do not all share the same option.
+     *
+     * @param  Collection<int, VoterUnit>  $ownedLotUnits
+     * @param  Collection<int, BallotResponse>  $responses
+     */
+    public function shouldUsePerLotVoteForm(Collection $ownedLotUnits, Collection $responses): bool
+    {
+        if (! $this->supportsBulkLotVoting($ownedLotUnits)) {
+            return false;
+        }
+
+        $optionIds = $ownedLotUnits
+            ->map(function (VoterUnit $unit) use ($responses) {
+                $response = $responses->first(
+                    fn ($candidate) => $candidate->voter_unit_type === $unit->type
+                        && $candidate->voter_unit_id === $unit->id
+                        && $candidate->proxy_vote_id === null
+                );
+
+                return $response?->ballot_option_id;
+            })
+            ->filter(fn ($optionId) => $optionId !== null)
+            ->unique()
+            ->values();
+
+        return $optionIds->count() > 1;
     }
 
     protected function isOwnedLotUnit(User $user, Ballot $ballot, VoterUnit $unit): bool

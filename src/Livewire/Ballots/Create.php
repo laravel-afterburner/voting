@@ -13,6 +13,7 @@ use Afterburner\Voting\Support\Electorate;
 use Afterburner\Voting\Support\ElectorateOptions;
 use Afterburner\Voting\Support\TeamDateTime;
 use Afterburner\Voting\Support\TeamVotingSettings;
+use Afterburner\Voting\Support\VotingAuditLogger;
 use App\Models\Team;
 use App\Traits\InteractsWithBanner;
 use Illuminate\Support\Facades\Auth;
@@ -236,8 +237,21 @@ class Create extends Component
             ->all();
 
         if ($this->ballotId) {
-            $ballot = Ballot::query()->where('team_id', $this->teamId)->findOrFail($this->ballotId);
+            $ballot = Ballot::query()->with('options')->where('team_id', $this->teamId)->findOrFail($this->ballotId);
             abort_unless(Auth::user()->can('update', $ballot), 403);
+
+            $before = [
+                'title' => $ballot->title,
+                'description' => $ballot->description,
+                'type' => $ballot->type->value,
+                'electorate' => $ballot->electorate->toSelection(),
+                'vote_visibility' => $ballot->vote_visibility->value,
+                'opens_at' => $ballot->opens_at?->toIso8601String(),
+                'closes_at' => $ballot->closes_at?->toIso8601String(),
+                'quorum_percent' => $ballot->quorum_percent,
+                'allow_abstain' => $ballot->allow_abstain,
+                'option_labels' => $ballot->options->pluck('label')->values()->all(),
+            ];
 
             $voteVisibility = BallotVoteVisibilityGuard::resolveForUpdate(
                 $ballot,
@@ -265,7 +279,28 @@ class Create extends Component
                 ]);
             }
 
-            return $ballot->fresh(['options']);
+            $ballot = $ballot->fresh(['options']);
+
+            $after = [
+                'title' => $ballot->title,
+                'description' => $ballot->description,
+                'type' => $ballot->type->value,
+                'electorate' => $ballot->electorate->toSelection(),
+                'vote_visibility' => $ballot->vote_visibility->value,
+                'opens_at' => $ballot->opens_at?->toIso8601String(),
+                'closes_at' => $ballot->closes_at?->toIso8601String(),
+                'quorum_percent' => $ballot->quorum_percent,
+                'allow_abstain' => $ballot->allow_abstain,
+                'option_labels' => $ballot->options->pluck('label')->values()->all(),
+            ];
+
+            VotingAuditLogger::ballotUpdated(
+                $ballot,
+                Auth::user(),
+                self::attributeDiff($before, $after),
+            );
+
+            return $ballot;
         }
 
         return app(CreateBallot::class)->execute(
@@ -282,6 +317,27 @@ class Create extends Component
             $closesAt,
             $this->allowAbstain,
         );
+    }
+
+    /**
+     * @param  array<string, mixed>  $before
+     * @param  array<string, mixed>  $after
+     * @return array<string, array{before: mixed, after: mixed}>
+     */
+    protected static function attributeDiff(array $before, array $after): array
+    {
+        $changes = [];
+
+        foreach (array_unique(array_merge(array_keys($before), array_keys($after))) as $key) {
+            $beforeValue = $before[$key] ?? null;
+            $afterValue = $after[$key] ?? null;
+
+            if ($beforeValue != $afterValue) {
+                $changes[$key] = ['before' => $beforeValue, 'after' => $afterValue];
+            }
+        }
+
+        return $changes;
     }
 
     public function render()

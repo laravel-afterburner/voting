@@ -13,6 +13,7 @@ use Afterburner\Voting\Database\Seeders\VotingPermissionsSeeder;
 use Afterburner\Voting\Events\BallotPublished;
 use Afterburner\Voting\Listeners\SendBallotPublishedVoterNotifications;
 use Afterburner\Voting\Livewire\Ballots\BallotDocuments;
+use Afterburner\Voting\Livewire\Ballots\BallotVoteForm;
 use Afterburner\Voting\Livewire\Ballots\BulkVoteForm;
 use Afterburner\Voting\Livewire\Ballots\Create;
 use Afterburner\Voting\Livewire\Ballots\Index;
@@ -176,6 +177,7 @@ class VotingServiceProvider extends ServiceProvider
         Livewire::component('voting.show', Show::class);
         Livewire::component('voting.vote-form', VoteForm::class);
         Livewire::component('voting.bulk-vote-form', BulkVoteForm::class);
+        Livewire::component('voting.ballot-vote-form', BallotVoteForm::class);
         Livewire::component('voting.create', Create::class);
         Livewire::component('voting.results', Results::class);
 

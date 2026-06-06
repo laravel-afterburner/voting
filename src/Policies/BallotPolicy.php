@@ -98,7 +98,25 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'close_ballots')) {
+        if (TeamPermissionGate::allowsAny($user, $ballot->team_id, ['close_ballots', 'manage_ballots'])) {
+            return true;
+        }
+
+        return TeamPermissionGate::allows($user, $ballot->team_id, 'create_resolutions')
+            && $ballot->created_by_user_id === $user->id;
+    }
+
+    public function reopen(User $user, Ballot $ballot): bool
+    {
+        if (! $this->belongsToBallotTeam($user, $ballot) || $ballot->status !== BallotStatus::Closed) {
+            return false;
+        }
+
+        if (! SubscriptionEntitlementGate::allows($ballot->team)) {
+            return false;
+        }
+
+        if (TeamPermissionGate::allowsAny($user, $ballot->team_id, ['close_ballots', 'manage_ballots'])) {
             return true;
         }
 
@@ -209,7 +227,7 @@ class BallotPolicy
 
     public function delete(User $user, Ballot $ballot): bool
     {
-        if (! $this->belongsToBallotTeam($user, $ballot) || $ballot->status !== BallotStatus::Draft) {
+        if (! $this->belongsToBallotTeam($user, $ballot)) {
             return false;
         }
 
@@ -217,7 +235,7 @@ class BallotPolicy
             return false;
         }
 
-        if (TeamPermissionGate::allows($user, $ballot->team_id, 'delete_ballots')) {
+        if (TeamPermissionGate::allowsAny($user, $ballot->team_id, ['delete_ballots', 'manage_ballots'])) {
             return true;
         }
 

@@ -1,27 +1,27 @@
 <div>
     <div class="rounded-lg border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-                <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $ballot->type->label() }}</p>
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div class="min-w-0">
+                <div class="flex flex-wrap items-center gap-2">
+                    <p class="text-sm font-medium text-gray-500 dark:text-gray-400">{{ $ballot->type->label() }}</p>
+                    <span @class([
+                        'rounded-full px-3 py-1 text-xs font-medium',
+                        $ballot->status->badgeClasses(),
+                    ])>
+                        {{ $ballot->status->label() }}
+                    </span>
+                </div>
                 <h3 class="mt-1 text-2xl font-semibold text-gray-900 dark:text-gray-100">{{ $ballot->title }}</h3>
                 @if ($ballot->description)
                     <p class="mt-3 text-sm text-gray-600 dark:text-gray-400">{{ $ballot->description }}</p>
                 @endif
             </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <span @class([
-                    'rounded-full px-3 py-1 text-xs font-medium',
-                    $ballot->status->badgeClasses(),
-                ])>
-                    {{ $ballot->status->label() }}
-                </span>
 
-                @if ($canUpdate)
-                    <x-button href="{{ route('teams.ballots.edit', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate>
-                        Edit ballot
-                    </x-button>
-                @endif
-            </div>
+            @if ($canUpdate)
+                <x-button class="shrink-0" href="{{ route('teams.ballots.edit', ['team' => $team, 'ballot' => $ballot]) }}" wire:navigate>
+                    Edit
+                </x-button>
+            @endif
         </div>
 
         <dl class="mt-6 grid gap-4 sm:grid-cols-2">
@@ -51,37 +51,74 @@
             @endif
         </dl>
 
-        @if ($responses->isNotEmpty())
-            <div class="-mx-6 mt-5 border-y border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-900/30">
-                @foreach ($responses as $response)
+        @if ($showSupportingDocuments)
+            <div class="-mx-6 mt-5 border-y border-gray-200 px-6 py-4 dark:border-gray-700">
+                @livewire('voting.ballot-documents', [
+                    'teamId' => $team->id,
+                    'ballotId' => $ballot->id,
+                    'inPanel' => true,
+                ], key('ballot-documents-'.$ballot->id))
+            </div>
+        @elseif (\Afterburner\Voting\Support\DocumentsIntegration::shouldPromptInstall() && $ballot->isOpen())
+            <div class="-mx-6 mt-5 border-y border-gray-200 px-6 py-4 dark:border-gray-700">
+                @include('afterburner-voting::components.documents-install-prompt', ['context' => 'ballot', 'class' => ''])
+            </div>
+        @endif
+
+        @if ($voteSummaries->isNotEmpty())
+            <div wire:key="vote-summary-{{ $voteSummaryVersion }}" @class([
+                '-mx-6 mt-5 border-y border-gray-200 px-6 py-4 dark:border-gray-700',
+                config('afterburner-voting.ui.vote_cast_panel_classes', 'bg-gray-50 dark:bg-gray-900/30'),
+            ])>
+                @foreach ($voteSummaries as $summary)
                     <div @class([
                         'flex flex-wrap items-center justify-between gap-3',
                         'mt-3' => ! $loop->first,
                     ])>
-                        <div class="min-w-0">
+                        <div class="min-w-0 flex-1">
                             @if ($loop->first)
-                                <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">You voted:</p>
+                                <div class="flex flex-wrap items-center justify-between gap-3">
+                                    <p class="text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">Your vote</p>
+                                    @if ($canVote && ! $showVoteForm)
+                                        <x-secondary-button type="button" wire:click="showUpdateVoteForm" no-spinner>
+                                            Update vote
+                                        </x-secondary-button>
+                                    @endif
+                                </div>
                             @endif
                             <p @class([
                                 'flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-900 dark:text-gray-100',
                                 'mt-1' => $loop->first,
                             ])>
+                                @if ($summary['unit_label'])
+                                    <span class="text-gray-500 dark:text-gray-400">{{ $summary['unit_label'] }}: </span>
+                                @endif
                                 <span class="inline-flex items-center gap-1.5 font-medium text-green-700 dark:text-green-400">
                                     <svg class="h-4 w-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                     </svg>
-                                    {{ $response->option->label }}
+                                    {{ $summary['option_label'] }}
                                 </span>
+                                @if ($summary['via_proxy'])
+                                    <span class="text-xs text-indigo-600 dark:text-indigo-400">via proxy</span>
+                                @endif
                             </p>
                         </div>
-                        @if ($allowVoteRevocation && $ballot->isOpen() && auth()->user()->can('revokeVote', [$ballot, $response->voter_unit_type, $response->voter_unit_id]))
-                            <x-action-icon
-                                type="delete"
-                                wire:click="revokeVote({{ $response->id }})"
-                                wire:confirm="Revoke this vote? You will not be able to vote again on this ballot for this unit."
-                                class="shrink-0"
-                                title="Revoke vote"
-                            />
+                        @if ($allowVoteRevocation && $ballot->isOpen())
+                            @php
+                                $canRevokeSummary = collect($summary['voter_units'])->every(
+                                    fn (array $unit) => auth()->user()->can('revokeVote', [$ballot, $unit['type'], $unit['id']])
+                                );
+                            @endphp
+                            @if ($canRevokeSummary)
+                                <x-action-icon
+                                    type="delete"
+                                    wire:click="revokeVotes(@js($summary['response_ids']))"
+                                    wire:confirm="{{ $summary['consolidated'] ? 'Revoke these votes? You will not be able to vote again on this ballot for these lots.' : 'Revoke this vote? You will not be able to vote again on this ballot for this unit.' }}"
+                                    class="shrink-0"
+                                    title="Revoke vote"
+                                />
+                            @endif
                         @endif
                     </div>
                 @endforeach
@@ -101,17 +138,22 @@
         <div class="mt-6 flex flex-wrap justify-end gap-3">
             @if ($canDelete)
                 <x-danger-button type="button" wire:click="confirmBallotDeletion" no-spinner>
-                    Delete Ballot
+                    Delete
                 </x-danger-button>
             @endif
             @if ($canPublish)
                 <x-button wire:click="publishBallot" no-spinner>
-                    Publish Ballot
+                    Publish
+                </x-button>
+            @endif
+            @if ($canReopen)
+                <x-button wire:click="reopenBallot" no-spinner>
+                    Reopen
                 </x-button>
             @endif
             @if ($canClose)
                 <x-secondary-button wire:click="closeBallot" no-spinner>
-                    Close Ballot
+                    Close
                 </x-secondary-button>
             @endif
             @if ($canViewResults)
@@ -122,61 +164,12 @@
         </div>
     </div>
 
-    @if (\Afterburner\Voting\Support\DocumentsIntegration::isEnabled())
-        @livewire('voting.ballot-documents', [
-            'teamId' => $team->id,
-            'ballotId' => $ballot->id,
-        ], key('ballot-documents-'.$ballot->id))
-    @elseif (\Afterburner\Voting\Support\DocumentsIntegration::shouldPromptInstall())
-        @include('afterburner-voting::components.documents-install-prompt', ['context' => 'ballot'])
-    @endif
-
-    @if ($canVote)
-        <div class="mt-6 space-y-6">
-            @if ($supportsBulkLotVoting && ! $votePerLot)
-                @livewire('voting.bulk-vote-form', [
-                    'ballotId' => $ballot->id,
-                    'units' => $bulkLotUnits,
-                ], key('bulk-vote-form-'.$ballot->id.'-'.md5(json_encode($bulkLotUnits))))
-
-                <div class="flex justify-end">
-                    <x-secondary-button type="button" wire:click="showVotePerLot" no-spinner>
-                        Vote separately for each lot
-                    </x-secondary-button>
-                </div>
-            @endif
-
-            @if ($supportsBulkLotVoting && $votePerLot)
-                <div class="flex justify-end">
-                    <x-secondary-button type="button" wire:click="showBulkVote" no-spinner>
-                        Vote for all lots at once
-                    </x-secondary-button>
-                </div>
-            @endif
-
-            @foreach ($supportsBulkLotVoting && $votePerLot ? $ownedLotUnits : ($supportsBulkLotVoting ? collect() : $ownedLotUnits) as $unit)
-                @livewire('voting.vote-form', [
-                    'ballotId' => $ballot->id,
-                    'voterUnitType' => $unit->type,
-                    'voterUnitId' => $unit->id,
-                ], key('vote-form-'.$unit->key()))
-            @endforeach
-
-            @foreach ($proxyUnits as $unit)
-                @livewire('voting.vote-form', [
-                    'ballotId' => $ballot->id,
-                    'voterUnitType' => $unit->type,
-                    'voterUnitId' => $unit->id,
-                ], key('vote-form-'.$unit->key()))
-            @endforeach
-
-            @foreach ($individualUnits as $unit)
-                @livewire('voting.vote-form', [
-                    'ballotId' => $ballot->id,
-                    'voterUnitType' => $unit->type,
-                    'voterUnitId' => $unit->id,
-                ], key('vote-form-'.$unit->key()))
-            @endforeach
+    @if ($canVote && $showVoteForm)
+        <div class="mt-6">
+            @livewire('voting.ballot-vote-form', [
+                'ballotId' => $ballot->id,
+                'votePerLot' => $votePerLot,
+            ], key('ballot-vote-form-'.$ballot->id.'-'.$voteSummaryVersion))
         </div>
     @endif
 
@@ -186,7 +179,24 @@
         </x-slot>
 
         <x-slot name="content">
-            Are you sure you want to delete this ballot? This action cannot be undone.
+            @if ($hasRecordedVotes)
+                <div class="rounded-md border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/40">
+                    <p class="text-sm font-semibold text-red-800 dark:text-red-200">
+                        This ballot has recorded votes.
+                    </p>
+                    <p class="mt-2 text-sm text-red-700 dark:text-red-300">
+                        Deleting it will permanently remove the ballot and all {{ number_format($ballot->responses_count) }}
+                        {{ Str::plural('vote', $ballot->responses_count) }} cast on it. This cannot be undone and may affect audit records or published results.
+                    </p>
+                </div>
+                <p class="mt-4 text-sm text-gray-600 dark:text-gray-400">
+                    Are you sure you want to delete <span class="font-medium text-gray-900 dark:text-gray-100">{{ $ballot->title }}</span>?
+                </p>
+            @else
+                <p class="text-sm text-gray-600 dark:text-gray-400">
+                    Are you sure you want to delete <span class="font-medium text-gray-900 dark:text-gray-100">{{ $ballot->title }}</span>? This action cannot be undone.
+                </p>
+            @endif
         </x-slot>
 
         <x-slot name="footer">
