@@ -44,7 +44,7 @@ class InstallCommand extends Command
         $this->comment('Next steps:');
         $this->comment('1. Add the HasVoting trait to App\\Models\\Team');
         $this->comment('2. For strata apps, implement a custom VoterEligibilityResolver');
-        $this->comment('3. Visit /teams/{team}/ballots to start using voting');
+        $this->comment('3. Visit /'.entity_url_slug().'/{team}/ballots to start using voting');
         $this->comment('4. Configure team defaults in System Settings → Voting');
         $this->comment('Note: Voting migrations load automatically from the package.');
 

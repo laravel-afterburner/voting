@@ -6,28 +6,29 @@ use Afterburner\Voting\Http\Controllers\ProxiesController;
 use Afterburner\Voting\Models\Ballot;
 use Illuminate\Support\Facades\Route;
 
+
 Route::middleware(['web', 'auth', 'verified'])->group(function () {
-    Route::get('/teams/{team}/ballots', [BallotsController::class, 'index'])
+    Route::get('/' . entity_url_slug() . '/{team}/ballots', [BallotsController::class, 'index'])
         ->name('teams.ballots.index');
 
-    Route::get('/teams/{team}/ballots/create', [BallotsController::class, 'create'])
+    Route::get('/' . entity_url_slug() . '/{team}/ballots/create', [BallotsController::class, 'create'])
         ->name('teams.ballots.create')
         ->middleware('can:create,'.Ballot::class.',team');
 
-    Route::get('/teams/{team}/ballots/{ballot}', [BallotsController::class, 'show'])
+    Route::get('/' . entity_url_slug() . '/{team}/ballots/{ballot}', [BallotsController::class, 'show'])
         ->name('teams.ballots.show');
 
-    Route::get('/teams/{team}/ballots/{ballot}/results', [BallotsController::class, 'results'])
+    Route::get('/' . entity_url_slug() . '/{team}/ballots/{ballot}/results', [BallotsController::class, 'results'])
         ->name('teams.ballots.results');
 
-    Route::get('/teams/{team}/ballots/{ballot}/results/export', ExportBallotResultsController::class)
+    Route::get('/' . entity_url_slug() . '/{team}/ballots/{ballot}/results/export', ExportBallotResultsController::class)
         ->name('teams.ballots.results.export')
         ->middleware('can:exportResults,ballot');
 
-    Route::get('/teams/{team}/ballots/{ballot}/edit', [BallotsController::class, 'edit'])
+    Route::get('/' . entity_url_slug() . '/{team}/ballots/{ballot}/edit', [BallotsController::class, 'edit'])
         ->name('teams.ballots.edit')
         ->middleware('can:update,ballot');
 
-    Route::get('/teams/{team}/voting/proxies', ProxiesController::class)
+    Route::get('/' . entity_url_slug() . '/{team}/voting/proxies', ProxiesController::class)
         ->name('teams.voting.proxies');
 });

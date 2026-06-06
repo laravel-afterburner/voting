@@ -2,6 +2,7 @@
 
 namespace Afterburner\Voting\Livewire\Proxies;
 
+use Afterburner\Support\EntityLabel;
 use Afterburner\Voting\Actions\CreateProxy;
 use Afterburner\Voting\Actions\RevokeProxy;
 use Afterburner\Voting\Contracts\ProxyGrantResolver;
@@ -69,7 +70,7 @@ class Manager extends Component
         $proxyHolder = User::query()->findOrFail($this->proxyHolderUserId);
 
         if (! $proxyHolder->belongsToTeam($this->team)) {
-            $this->addError('proxyHolderUserId', 'Proxy holder must be a '.config('afterburner.entity_label').' member.');
+            $this->addError('proxyHolderUserId', 'Proxy holder must be a '.EntityLabel::singular().' member.');
 
             return;
         }

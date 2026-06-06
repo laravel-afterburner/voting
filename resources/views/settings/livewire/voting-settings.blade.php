@@ -5,7 +5,7 @@
         </x-slot>
 
         <x-slot name="description">
-            Configure default ballot options for this {{ config('afterburner.entity_label', 'team') }}. New ballots inherit these values; individual ballots can override them.
+            Configure default ballot options for this {{ entity_label() }}. New ballots inherit these values; individual ballots can override them.
         </x-slot>
 
         <x-slot name="form">

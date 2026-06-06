@@ -3,6 +3,7 @@
 namespace Afterburner\Voting\Tests;
 
 use Afterburner\Documents\Providers\DocumentsServiceProvider;
+use Afterburner\Support\Testing\Concerns\ConfiguresAfterburnerEntity;
 use Afterburner\Voting\Enums\BallotStatus;
 use Afterburner\Voting\Enums\BallotType;
 use Afterburner\Voting\Enums\ElectorateType;
@@ -20,6 +21,7 @@ use Orchestra\Testbench\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
 {
+    use ConfiguresAfterburnerEntity;
     use RefreshDatabase;
 
     protected function setUp(): void
@@ -51,6 +53,8 @@ abstract class TestCase extends BaseTestCase
 
     protected function defineEnvironment($app): void
     {
+        static::applyAfterburnerEntityConfig($app);
+
         $app['config']->set('app.key', 'base64:'.base64_encode(random_bytes(32)));
         $app['config']->set('database.default', 'testing');
         $app['config']->set('database.connections.testing', [

@@ -2,7 +2,7 @@
     @unless ($proxiesEnabled)
         <div class="rounded-md bg-yellow-50 dark:bg-yellow-900/20 p-4">
             <p class="text-sm text-yellow-800 dark:text-yellow-200">
-                Proxy votes are not enabled for this {{ config('afterburner.entity_label') }}.
+                Proxy votes are not enabled for this {{ entity_label() }}.
             </p>
         </div>
     @endunless
@@ -14,7 +14,7 @@
             </x-slot>
 
             <x-slot name="description">
-                Authorize a {{ config('afterburner.entity_label') }} member to vote on your behalf for a {{ strtolower($voterUnitSelectionLabel) }}. A proxy applies to one ballot at a time, or to all open ballots for that {{ strtolower($voterUnitSelectionLabel) }}.
+                Authorize a {{ entity_label() }} member to vote on your behalf for a {{ strtolower($voterUnitSelectionLabel) }}. A proxy applies to one ballot at a time, or to all open ballots for that {{ strtolower($voterUnitSelectionLabel) }}.
             </x-slot>
 
             <x-slot name="form">
@@ -40,7 +40,7 @@
                         wire:model="proxyHolderUserId"
                         class="mt-1 block w-full border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-300 focus:border-indigo-500 dark:focus:border-indigo-600 focus:ring-indigo-500 dark:focus:ring-indigo-600 rounded-md shadow-sm"
                     >
-                        <option value="">Select a {{ config('afterburner.entity_label') }} member</option>
+                        <option value="">Select a {{ entity_label() }} member</option>
                         @foreach ($teamMembers as $member)
                             <option value="{{ $member->id }}">{{ $member->name }} ({{ $member->email }})</option>
                         @endforeach
@@ -113,7 +113,7 @@
         </x-slot>
 
         <x-slot name="description">
-            Active and revoked proxies for {{ strtolower($voterUnitSelectionLabel) }}s on this {{ config('afterburner.entity_label') }}.
+            Active and revoked proxies for {{ strtolower($voterUnitSelectionLabel) }}s on this {{ entity_label() }}.
         </x-slot>
 
         <x-slot name="content">
